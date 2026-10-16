@@ -1,0 +1,158 @@
+%% 归否 App 关键流程时序图（4 个主流程）
+%% 完整说明见 docs/ARCHITECTURE.md §5
+
+sequenceDiagram
+    autonumber
+    actor U as 用户
+    participant SP as ServerSetupPage(P01)
+    participant SS as useServerStore
+    participant HC as net/httpClient
+    participant PHP as PHP /api
+    participant AS as useAuthStore
+    participant KV as storage/kv
+    participant RT as router
+
+    Note over U,RT: ① 首次启动：配置服务器 → 测试连接 → 登录
+    U->>SP: 打开 App（无已保存服务器）
+    SP->>SS: initServers()（读 guifou.selfhost）
+    SS-->>SP: servers = []
+    RT->>SP: 强制进入 P01
+    U->>SP: 输入 "192.168.1.100:3030"
+    SP->>SP: lib/url.normalizeServerUrl()
+    U->>SP: 点「测试连接」
+    SP->>SS: probe(url)
+    SS->>HC: request(url,{path:'/api/health',auth:false,timeoutMs:8000})
+    HC->>PHP: GET /api/health
+    alt 200 + ok:true + db:true
+        PHP-->>SS: {ok:true,db:true}
+        SP-->>U: 绿点「已连接」
+    else 200 + ok:true + db:false
+        PHP-->>SS: {ok:true,db:false}
+        SP-->>U: 黄点「已连通，但数据库异常」
+    else 非 2xx
+        PHP-->>HC: 404/500
+        SP-->>U: 「服务器已连通，但接口返回异常（HTTP xxx）」
+    else 超时/DNS/拒绝
+        HC-->>SS: ApiError('timeout'|'network')
+        SP-->>U: 「无法连接到服务器，请检查地址、端口与网络」
+    end
+    U->>SP: 点「跳过，先离线使用」
+    SP->>KV: setKV('guifou.ui',{offlineMode:true})
+    RT->>RT: 进入 Main（离线可用）
+    U->>SP: 或输入邮箱/密码 → 登录
+    SP->>AS: login(email,password)
+    AS->>HC: POST /api/auth/login（JSON body + Content-Type）
+    HC->>PHP: POST /api/auth/login
+    alt 200
+        PHP-->>AS: {ok,token,user}
+        AS->>KV: setKV('guifou.user',session)
+        RT->>RT: 进入 Main
+    else 401
+        PHP-->>AS: {ok:false,error:'账号或密码不正确'}
+        SP-->>U: 就地红字提示
+    end
+
+
+sequenceDiagram
+    autonumber
+    actor U as 用户
+    participant AI as AiPage(P10)
+    participant PS as ai/parseService
+    participant AC as net/aiClient
+    participant LLM as 第三方 LLM
+    participant LP as ai/localParser
+    participant CP as AiConfirmPage(P11)
+    participant DS as useDataStore
+    participant RP as storage/repo
+
+    Note over U,RP: ② 记一笔：AI 解析 → 多条确认 → 落库
+    U->>AI: 「今天早上吃了油条包子花了30，然后坐火车花了60去桐柏」
+    AI->>PS: parse(text,categories,settings)
+    PS->>PS: splitSentences() → 2 句
+    alt 已配置 aiEndpoint + aiKey
+        PS->>AC: chatComplete(cfg,[system,user])
+        AC->>LLM: POST /chat/completions（CapacitorHttp，不经 PHP）
+        LLM-->>AC: content（可能带 ```json 包裹）
+        AC->>AC: extractJsonArray()
+        AC-->>PS: AiResultItem[]（source='ai'）
+    else 未配置 / 失败 / JSON 非法
+        PS->>LP: parseLocal(sentence,cats)
+        LP-->>PS: AiResultItem[]（source='local'）
+    end
+    PS-->>AI: AiResultItem[]
+    AI->>CP: navigate('/ai/confirm',{items})
+    CP-->>U: 2 张可勾选卡片（可编辑）
+    U->>CP: 勾选并改 judgement → 「保存这 2 条」
+    CP->>DS: addLedger(d1); addLedger(d2)
+    DS->>RP: saveCollection('valueRecords',[...])
+    RP->>RP: Preferences.set('guifou.valueRecords')
+    CP-->>U: Toast「已保存 2 条」+ Haptics
+
+
+sequenceDiagram
+    autonumber
+    actor U as 用户
+    participant BP as BackupPage(P21)
+    participant POL as domain/backupPolicy
+    participant SN as storage/snapshot
+    participant BK as api/backups
+    participant PHP as PHP /api
+    participant DS as useDataStore
+
+    Note over U,DS: ③ 云备份上传 / 恢复（服务端仅保留最近 3 份）
+    U->>BP: 点「立即备份」
+    BP->>SN: buildSnapshot(state)
+    SN-->>BP: {collections,settings,count,app:'guifou-web',version:1,exportedAt}
+    BP->>BK: createBackup(server,{payload,label,item_count,device})
+    BK->>PHP: POST /api/user/backups
+    PHP->>PHP: INSERT + trimBackups(3)
+    PHP-->>BP: {ok:true,id}
+    BP-->>U: 刷新列表 + 「服务端仅保留最近 3 份」
+    U->>BP: 选一份 → 点「恢复」
+    BP->>U: Dialog 二次确认（将覆盖本机数据）
+    U->>BP: 确认
+    BP->>BK: getBackup(server,id)
+    BK->>PHP: GET /api/user/backups/{id}
+    PHP-->>BK: {ok:true,payload,label}
+    BK->>SN: applySnapshot(payload)（字符串则 JSON.parse）
+    SN->>DS: setAllCollections(next)
+    BP-->>U: Toast 6s「已从备份恢复完成。提示：从网页版备份恢复时，已停用的订阅会显示为在用，如需停用请重新操作。」
+    POL->>POL: shouldAutoBackup(): 登录 && autoSync && 变更≥5 && >24h
+    POL->>BK: createBackup({label:'自动备份'})（静默）
+
+
+sequenceDiagram
+    autonumber
+    participant M as main.tsx
+    participant AP as useAppStore
+    participant RP as storage/repo
+    participant SD as storage/seed
+    participant AS as useAuthStore
+    participant HC as net/httpClient
+    participant PHP as PHP /api
+    participant RT as router
+
+    Note over M,RT: ④ 冷启动 hydrate + 登录态校验
+    M->>AP: init()
+    AP->>RP: 12 × loadCollection('guifou.<name>')
+    AP->>SD: ensureSeeded()
+    SD->>RP: saveCollection('categories',SEED_CATEGORIES)
+    AP->>AP: hydrated = true
+    alt 有保存的 token
+        AP->>AS: verify()
+        AS->>HC: GET /api/auth/me（auth:true）
+        HC->>PHP: GET /api/auth/me
+        alt 200
+            AS->>AS: sessionState='valid'
+            RT->>RT: 直进 Main
+        else 401
+            AS->>AS: markExpired()（清 token，保留本地数据）
+            HC->>AS: onUnauthorized → 连接条变黄
+            RT->>RT: 进 Login
+        else network/timeout
+            AS->>AS: sessionState='offline'
+            RT->>RT: 进 Main（离线可用）
+        end
+    else 无 token
+        RT->>RT: servers 为空 ? Onboarding : Login
+    end

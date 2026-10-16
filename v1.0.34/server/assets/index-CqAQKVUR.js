@@ -1,0 +1,1 @@
+import{r as o}from"./index-CRIAl409.js";import"./react-B96LqRAS.js";var a;(function(t){t.Dark="DARK",t.Light="LIGHT",t.Default="DEFAULT"})(a||(a={}));var r;(function(t){t.None="NONE",t.Slide="SLIDE",t.Fade="FADE"})(r||(r={}));const i=r,u=a,e=o("StatusBar");export{r as Animation,e as StatusBar,i as StatusBarAnimation,u as StatusBarStyle,a as Style};

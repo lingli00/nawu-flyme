@@ -1,0 +1,468 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================
+   纳物 · 设计令牌（与 Web 版 / PRD §5.1 一一对应）
+   组件里只允许用变量，禁止写死色值，深浅色只换这里的变量。
+   ============================================================ */
+:root {
+  --paper: #f4f5f3;
+  --surface: #ffffff;
+  --surface-2: #fafbfa;
+  --ink: #18201c;
+  --ink-2: #4d5751;
+  /* ★v1.0.33 P0-3：#8a938d 白底对比度仅 3.15:1（不达 WCAG AA 4.5:1），
+     加深至 #6b7370 → 4.87:1；它是全站 11px 辅助文字的常用色，可读性优先 */
+  --ink-3: #6b7370;
+  --line: #e4e7e3;
+  --line-2: #eef0ed;
+  --accent: #3f7d67;
+  --accent-2: #346a57;
+  --accent-soft: #e7f0ec;
+  --gui: #3f8f6a;
+  --xu: #4a7fb5;
+  --fou: #c2603f;
+  --warn: #b98a1f;
+  --warn-soft: #f6eeda;
+  --danger: #c0483c;
+  --danger-soft: #f7e3e0;
+  /* ★v1.0.33 P0-4：语义 tint 令牌 —— 记录入口与生活流专用色全部收敛于此，
+     组件禁止再写死十六进制（替代 RecordMenu/LifeSheets/LedgerPage/ReportPage 的 30 处散落色值） */
+  --tint-warm: #b97f22; /* 琥珀：心动清单 / 订阅提醒（原 #c98a2d / #F59E0B） */
+  --tint-cool: #2e8a7a; /* 青瓷：冷静池 / 时间切片（原 #2e9e8a / #10B981） */
+  --tint-clay: #b3563a; /* 陶土：情绪速写 / 否判定（原 #c2603f / #EC4899） */
+  --tint-violet: #7c5cd6; /* 紫：手动录入（原 #8B5CF6） */
+  --radius-card: 16px;
+  --radius-btn: 10px;
+  --shadow: 0 1px 2px rgba(24, 32, 28, 0.05), 0 2px 8px rgba(24, 32, 28, 0.04);
+  --shadow-lg: 0 4px 12px -2px rgba(24, 32, 28, 0.08), 0 12px 28px -8px rgba(24, 32, 28, 0.1);
+  --safe-t: env(safe-area-inset-top, 0px);
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  /* PC 桌面壳侧边栏（与原 PC 网页同款深绿） */
+  --side: #1e2a25;
+  --side-2: #26332d;
+  --side-ink: #e8edea;
+  --side-dim: #b9c4bd;
+  color-scheme: light;
+}
+
+/* 深色令牌（PRD §5.1 原样搬入） */
+[data-theme='dark'] {
+  --paper: #121513;
+  --surface: #1a1f1d;
+  --surface-2: #202623;
+  --ink: #e9ecea;
+  --ink-2: #b2bab5;
+  /* ★v1.0.33 P0-3：深色底下提亮，#7c847e 于 surface 上仅 4.29:1 → #8a938d 达 5.28:1 */
+  --ink-3: #8a938d;
+  --line: #2b312e;
+  --line-2: #232925;
+  --accent: #63a68c;
+  --accent-2: #7bb99f;
+  --accent-soft: #1e2c26;
+  --gui: #3f8f6a;
+  --xu: #4a7fb5;
+  --fou: #c2603f;
+  --warn: #cf9f3f;
+  --warn-soft: #3a2f18;
+  --danger: #d07067;
+  --danger-soft: #3a2320;
+  /* 深色 tint：在深底上提亮一档，保持 4.9:1 以上对比度 */
+  --tint-warm: #cf9f3f;
+  --tint-cool: #4aa696;
+  --tint-clay: #d07067;
+  --tint-violet: #9d86e8;
+  --side: #121815;
+  --side-2: #1a231e;
+  --side-ink: #e8edea;
+  --side-dim: #93a29a;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.24), 0 2px 8px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 4px 12px -2px rgba(0, 0, 0, 0.36), 0 12px 28px -8px rgba(0, 0, 0, 0.44);
+  color-scheme: dark;
+}
+
+/* ============================================================
+   P1-9 基础控件类（components/ui 的样式底座）
+   原先「h-11 w-full rounded-btn border border-line bg-surface-2 px-3 text-sm
+   outline-none focus:border-accent」在 tsx 里重复了 48 处 —— 改一次输入框
+   样式要动 48 个文件位置。现在收敛为 .nw-input / .nw-textarea / .nw-chip 等，
+    React 侧由 src/components/ui 下的组件消费。
+   ============================================================ */
+@layer components {
+  /* 不含尺寸类（h-11/w-full 由调用方决定），便于与 h-10 / flex-1 / mt-3 等组合 */
+  .nw-input {
+    @apply rounded-btn border border-line bg-surface-2 px-3 text-sm text-ink outline-none transition-colors placeholder:text-ink-3 focus:border-accent;
+  }
+  .nw-input:disabled {
+    @apply cursor-not-allowed opacity-60;
+  }
+  .nw-textarea {
+    @apply w-full rounded-btn border border-line bg-surface-2 px-3 py-2.5 text-sm leading-6 text-ink outline-none transition-colors placeholder:text-ink-3 focus:border-accent;
+  }
+  /* 筛选 / 排序 chip（选中 = accent 边 + accent-soft 底 + accent 字） */
+  .nw-chip {
+    @apply inline-flex h-8 shrink-0 items-center gap-1 rounded-full border px-3.5 text-xs transition-all active:scale-95;
+  }
+  .nw-chip[data-selected='true'] {
+    @apply border-accent bg-accent-soft font-medium text-accent;
+  }
+  .nw-chip[data-selected='false'] {
+    @apply border-line bg-surface text-ink-2;
+  }
+  /* 分段控件（Segmented）容器与滑块 */
+  .nw-seg {
+    @apply inline-flex h-9 items-center rounded-full border border-line bg-surface-2 p-1;
+  }
+  .nw-seg-item {
+    @apply relative z-10 flex h-7 items-center justify-center rounded-full px-3.5 text-xs font-medium transition-colors;
+  }
+}
+
+/* ============================================================
+   基础
+   ============================================================ */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Noto Sans SC', 'Microsoft YaHei',
+    system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 20px;
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior-y: none;
+}
+
+/* 数字统一等宽（金额对齐是硬需求） */
+.tnum {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+}
+
+/* iOS/Android 输入框不因聚焦而放大 */
+input,
+textarea,
+select,
+button {
+  font-family: inherit;
+  font-size: 16px;
+  color: inherit;
+}
+
+button {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+/* 禁止长按选中/复制（App 观感），表单输入保留可选 */
+body {
+  -webkit-user-select: none;
+  user-select: none;
+}
+input,
+textarea {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* ============================================================
+   字号层级（PRD §5.1）
+   ============================================================ */
+.t-h1 {
+  font-size: 22px;
+  line-height: 30px;
+  font-weight: 600;
+}
+.t-h2 {
+  font-size: 17px;
+  line-height: 24px;
+  font-weight: 600;
+}
+.t-h3 {
+  font-size: 15px;
+  line-height: 22px;
+  font-weight: 500;
+}
+.t-body {
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 400;
+}
+.t-caption {
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 400;
+}
+.t-num {
+  font-size: 28px;
+  line-height: 34px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.t-num-sm {
+  font-size: 16px;
+  line-height: 22px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ============================================================
+   安全区与骨架
+   ============================================================ */
+.topbar {
+  padding-top: var(--safe-t);
+  height: calc(56px + var(--safe-t));
+}
+.tabbar {
+  padding-bottom: var(--safe-b);
+  height: calc(56px + var(--safe-b));
+}
+.sheet {
+  padding-bottom: var(--safe-b);
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+}
+
+/* 页面转场：200ms 淡入（架构 §10.7） */
+@keyframes flyme-page-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.page-enter {
+  animation: flyme-page-in 200ms ease-out both;
+}
+
+/* 居中弹窗弹入（首页物品详情大卡，对齐原版手感） */
+@keyframes flyme-pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.pop-enter {
+  animation: flyme-pop-in 200ms cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+
+/* 弹窗遮罩淡入 */
+@keyframes flyme-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.fade-enter {
+  animation: flyme-fade-in 160ms ease-out both;
+}
+
+/* 骨架屏 shimmer */
+@keyframes flyme-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+.shimmer {
+  background-image: linear-gradient(
+    90deg,
+    var(--surface-2) 25%,
+    var(--line-2) 37%,
+    var(--surface-2) 63%
+  );
+  background-size: 200% 100%;
+  animation: flyme-shimmer 1.4s ease-in-out infinite;
+}
+
+/* Sheet 上滑 250ms */
+@keyframes flyme-sheet-in {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: none;
+  }
+}
+.sheet-enter {
+  animation: flyme-sheet-in 250ms cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+
+/* ============================================================
+   品牌开屏动画（v1.0.17，开屏动画）
+   rhythm：logo 缩放淡入 700ms → 名称/口号阶梯上浮 → 停留 → 整体淡出
+   ============================================================ */
+@keyframes flyme-splash-logo {
+  from {
+    opacity: 0;
+    transform: scale(0.72) rotate(-10deg);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes flyme-splash-up {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes flyme-splash-out {
+  to {
+    opacity: 0;
+    transform: scale(1.05);
+  }
+}
+.splash-logo {
+  animation: flyme-splash-logo 700ms cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+.splash-up {
+  animation: flyme-splash-up 520ms cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+.splash-out {
+  animation: flyme-splash-out 420ms ease-in both;
+}
+
+/* Toast 淡入 */
+@keyframes flyme-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.toast-enter {
+  animation: flyme-toast-in 180ms ease-out both;
+}
+
+/* 滚动条隐藏（移动端观感） */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* ============================================================
+   P2-13 无障碍降级：全局遵循 prefers-reduced-motion。
+   reduce 时关闭位移/缩放类动画与无限 shimmer，只保留透明度过渡；
+   同时给 backdrop-filter 加 @supports 回退（低端安卓不糊也不崩）。
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  .page-enter,
+  .pop-enter,
+  .fade-enter,
+  .sheet-enter,
+  .toast-enter,
+  .splash-logo,
+  .splash-up,
+  .splash-out {
+    animation: none !important;
+  }
+  .shimmer {
+    animation: none !important;
+    background-image: none !important;
+    background-color: var(--surface-2) !important;
+  }
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+  /* 不支持毛玻璃的设备：用更实的底色保证可读性（MainShell GLASS_STYLE 的内联样式优先，
+     此处兜底作用于走 .glass-fallback 类的元素） */
+  .glass-fallback {
+    background: var(--surface) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+}
+
+/* 安全区工具类 */
+.pt-safe {
+  padding-top: var(--safe-t);
+}
+.pb-safe {
+  padding-bottom: var(--safe-b);
+}
+
+/* 按压态 */
+.pressable:active {
+  opacity: 0.7;
+}
+.pressable-surface:active {
+  background: var(--surface-2);
+}
+
+/* ============================================================
+   PC 桌面壳适配（v1.0.7）：
+   - 底部弹层（items-end overlay + .sheet-enter 面板）→ 右侧抽屉，
+     对齐原 PC 网页「右侧滑出编辑面板」的布局节奏；
+   - 居中确认弹层（items-center，如物品详情）不受影响。
+   弹层一律 portal 到 body，这里是全局唯一改动点。
+
+   ★v1.0.33 P1-10：新弹层请改用显式组件 src/components/ui/Sheet.tsx
+   （side="bottom" 桌面自动转抽屉，宽 30rem）—— 本全局规则仅兜底尚未迁移的
+   旧弹层；宽度同步 26rem → 30rem，与 Sheet 组件保持一致。
+   ============================================================ */
+@media (min-width: 1024px) {
+  .fixed.inset-0.items-end {
+    align-items: stretch;
+    justify-content: flex-end;
+  }
+  .fixed.inset-0.items-end > .sheet-enter {
+    height: 100%;
+    max-height: none;
+    width: 30rem;
+    max-width: 30rem;
+    margin-right: 0;
+    margin-left: auto;
+    border-radius: 1rem 0 0 0;
+    padding-bottom: 2rem;
+  }
+  /* 抽屉滑入方向：从右（覆盖 sheet-enter 的自下而上） */
+  @keyframes sheet-in-right {
+    from { transform: translateX(24px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+  .fixed.inset-0.items-end > .sheet-enter.sheet-enter {
+    animation: sheet-in-right 0.22s cubic-bezier(0.2, 0.8, 0.3, 1);
+  }
+}
