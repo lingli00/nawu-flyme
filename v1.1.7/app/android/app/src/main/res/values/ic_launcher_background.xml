@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- ★v1.1.4「01 净白印」：白底磁贴（原 #3F7D67 绿底）。前景字形见 drawable-v24 与 mipmap-* -->
+    <color name="ic_launcher_background">#FFFFFF</color>
+</resources>
