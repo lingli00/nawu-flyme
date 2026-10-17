@@ -1,0 +1,257 @@
+import { request } from '../net/httpClient';
+import { ApiError } from '../lib/error';
+import type { ServerConfig } from '../types/entities';
+
+/**
+ * v1.0.36 · 管理后台「在线更新 / App 发布」接口封装。
+ *
+ * 与管理后台其它请求一致：X-Admin-Token 头 + auth:false + ignoreUnauth:true + retry:0，
+ * 响应 ok!==true 时抛 ApiError（消息透传后端中文文案）。
+ */
+
+export interface ServerUpdateSource {
+  url: string;
+  effective: string;
+  autoCheck: boolean;
+}
+
+export interface ServerApplied {
+  version: string;
+  appliedAt: string;
+  source: string;
+  fileCount: number;
+}
+
+export interface ServerBackup {
+  id: string;
+  version: string;
+  createdAt: string;
+  sizeMb: number;
+  fileCount: number;
+}
+
+export interface ServerUpdateInfo {
+  version: string;
+  php: string;
+  os: string;
+  diskFreeMb: number | null;
+  source: ServerUpdateSource;
+  applied: ServerApplied | null;
+  backups: ServerBackup[];
+  activeJob: { id: string; status: string; phase: string } | null;
+  schema: { current: number; target: number };
+}
+
+export type UpdateComparison = 'newer' | 'same' | 'older';
+
+export interface UpdateCheckResult {
+  comparison: UpdateComparison;
+  canUpdate: boolean;
+  reason: string;
+  local: { version: string };
+  remote: {
+    version: string;
+    publishedAt: string;
+    notes: string;
+    packageSize: number;
+    packageSha256: string;
+    minVersion: string;
+  };
+  diff: {
+    added: number;
+    updated: number;
+    deleted: number;
+    kept: number;
+    totalRemote: number;
+    deletedList: string[];
+    deletedListCapped: boolean;
+  };
+  elapsedMs: number;
+}
+
+export interface UpdateJobLog {
+  t: string;
+  msg: string;
+}
+
+export interface UpdateJob {
+  id: string;
+  status: 'running' | 'stalled' | 'done' | 'failed' | 'rolled_back' | 'cancelled';
+  phase: string;
+  phaseLabel: string;
+  percent: number;
+  message: string;
+  log: UpdateJobLog[];
+  error: string | null;
+  progress: { bytes: number; totalBytes: number; fileIndex: number; fileTotal: number } | null;
+  backupId: string | null;
+  result: { added: number; updated: number; deleted: number } | null;
+  migration: { from: number; to: number; log: string[] } | null;
+  startedAt: string | null;
+  finishedAt: string | null;
+}
+
+export interface AppReleaseHistoryItem {
+  version: string;
+  file: string;
+  fileSize: number;
+  publishedAt: string;
+  notes: string;
+}
+
+export interface AppReleaseManifest {
+  version: string;
+  notes: string;
+  file: string;
+  fileSize: number;
+  publishedAt: string;
+  history: AppReleaseHistoryItem[];
+}
+
+async function adminRequest<T>(
+  server: Pick<ServerConfig, 'url'> | null | undefined,
+  token: string,
+  path: string,
+  init: {
+    method?: 'GET' | 'POST';
+    body?: unknown;
+    query?: Record<string, string | number>;
+    timeoutMs?: number;
+  } = {},
+): Promise<T> {
+  const res = await request<Record<string, unknown>>(server, {
+    method: init.method ?? 'GET',
+    path,
+    body: init.body,
+    query: init.query,
+    timeoutMs: init.timeoutMs,
+    auth: false,
+    retry: 0,
+    ignoreUnauth: true,
+    headers: token ? { 'X-Admin-Token': token } : undefined,
+  });
+  if (!res.data || res.data.ok !== true) {
+    throw new ApiError('http', (res.data as { error?: string })?.error ?? '请求失败', res.status, res.data);
+  }
+  return res.data as unknown as T;
+}
+
+export function fetchServerInfo(server: Pick<ServerConfig, 'url'> | null, token: string): Promise<{ info: ServerUpdateInfo }> {
+  return adminRequest<{ info: ServerUpdateInfo }>(server, token, '/api/admin/server/info');
+}
+
+export function fetchSource(
+  server: Pick<ServerConfig, 'url'> | null,
+  token: string,
+): Promise<{ url: string; autoCheck: boolean; effective: string }> {
+  return adminRequest(server, token, '/api/admin/server/source');
+}
+
+export function saveSource(
+  server: Pick<ServerConfig, 'url'> | null,
+  token: string,
+  url: string,
+  autoCheck: boolean,
+): Promise<Record<string, never>> {
+  return adminRequest(server, token, '/api/admin/server/source', { method: 'POST', body: { url, autoCheck } });
+}
+
+export function testSource(
+  server: Pick<ServerConfig, 'url'> | null,
+  token: string,
+  url: string,
+): Promise<{ remoteVersion: string; publishedAt: string; packageSize: number }> {
+  return adminRequest(server, token, '/api/admin/server/source/test', { method: 'POST', body: { url } });
+}
+
+export function checkServerUpdate(
+  server: Pick<ServerConfig, 'url'> | null,
+  token: string,
+  force = false,
+): Promise<UpdateCheckResult> {
+  return adminRequest<UpdateCheckResult>(server, token, '/api/admin/server/check', { method: 'POST', body: { force } });
+}
+
+export function startServerUpdate(
+  server: Pick<ServerConfig, 'url'> | null,
+  token: string,
+  force: boolean,
+  siteUrl = '',
+): Promise<{ jobId: string; resumed: boolean }> {
+  return adminRequest(server, token, '/api/admin/server/update', { method: 'POST', body: { force, siteUrl } });
+}
+
+export function fetchJob(
+  server: Pick<ServerConfig, 'url'> | null,
+  token: string,
+  jobId?: string,
+): Promise<{ job: UpdateJob | null }> {
+  return adminRequest<{ job: UpdateJob | null }>(server, token, '/api/admin/server/status', {
+    query: jobId ? { jobId } : undefined,
+  });
+}
+
+export function cancelJob(
+  server: Pick<ServerConfig, 'url'> | null,
+  token: string,
+  jobId: string,
+): Promise<Record<string, never>> {
+  return adminRequest(server, token, '/api/admin/server/cancel', { method: 'POST', body: { jobId } });
+}
+
+export function rollbackServer(
+  server: Pick<ServerConfig, 'url'> | null,
+  token: string,
+  backupId: string,
+): Promise<{ restored: number; version: string }> {
+  return adminRequest(server, token, '/api/admin/server/rollback', { method: 'POST', body: { backupId } });
+}
+
+export function runMigration(
+  server: Pick<ServerConfig, 'url'> | null,
+  token: string,
+): Promise<{ from: number; to: number; log: string[] }> {
+  return adminRequest(server, token, '/api/admin/server/migrate', { method: 'POST', body: {} });
+}
+
+export function fetchAppRelease(
+  server: Pick<ServerConfig, 'url'> | null,
+  token: string,
+): Promise<{ manifest: AppReleaseManifest; fileExists: boolean }> {
+  return adminRequest(server, token, '/api/admin/app-release');
+}
+
+/** 发布 App 安装包：raw body 上传（走后端 php://input，绕开 upload_max_filesize）。 */
+export async function publishAppRelease(
+  server: Pick<ServerConfig, 'url'> | null,
+  token: string,
+  file: Blob,
+  version: string,
+  notes: string,
+): Promise<{
+  manifest: { version: string; file: string; fileSize: number; publishedAt: string };
+  historyCount: number;
+  replaced: boolean;
+}> {
+  const buf = await file.arrayBuffer();
+  const res = await request<Record<string, unknown>>(server, {
+    method: 'POST',
+    path: '/api/admin/app-release',
+    rawBody: buf,
+    contentType: 'application/vnd.android.package-archive',
+    query: { version, notes },
+    timeoutMs: 600000,
+    auth: false,
+    retry: 0,
+    ignoreUnauth: true,
+    headers: token ? { 'X-Admin-Token': token } : undefined,
+  });
+  if (!res.data || res.data.ok !== true) {
+    throw new ApiError('http', (res.data as { error?: string })?.error ?? '发布失败', res.status, res.data);
+  }
+  return res.data as unknown as {
+    manifest: { version: string; file: string; fileSize: number; publishedAt: string };
+    historyCount: number;
+    replaced: boolean;
+  };
+}

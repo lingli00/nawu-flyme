@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  v1.0.33 安全修复说明
+  ─────────────────────────────────────────────────────────────
+  本文件与原版的差异只有一处：allowBackup true → false。
+
+  为什么改：
+    allowBackup="true" 时，adb backup / 云备份 / 换机迁移都能把应用私有数据
+    （Capacitor Preferences 里的登录 token、账号信息、本地数据库路径等）
+    整体打包导出。攻击者拿到备份文件即可还原出登录态，等于 token 泄露。
+    改为 false 后，系统级备份通道全部关闭，token 只留在应用沙箱内。
+
+  注意：纳物是 local-first 应用，用户数据主要在 IndexedDB（应用沙箱内），
+  关闭系统备份不影响正常使用；跨设备迁移请继续用应用内的「云备份」功能
+  （数据经用户自建服务器同步，且传输层由用户选择的 https/http 决定）。
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application
+        android:allowBackup="false"
+        android:hardwareAccelerated="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme"
+        android:usesCleartextTraffic="true"
+        android:networkSecurityConfig="@xml/network_security_config">
+
+        <activity
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode|navigation"
+            android:name=".MainActivity"
+            android:label="@string/title_activity_main"
+            android:theme="@style/AppTheme.NoActionBarLaunch"
+            android:launchMode="singleTask"
+            android:exported="true"
+            android:windowSoftInputMode="adjustResize">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+        </activity>
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths"></meta-data>
+        </provider>
+    </application>
+
+    <!-- Permissions -->
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- v1.0.36：应用内更新（下载 APK 后调起系统安装器，Android 8+ 需用户授权） -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+    <!-- P1：订阅 / 保修提醒通知 -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- P1：物品图片（相册读取，Android 13+） -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <!-- v1.1.5：首页天气的位置精度——只用于「用手机定位」按钮，用户点了才请求，
+         拒绝授权则一直按 IP 推测（不影响其他功能）。不用后台定位，不申请 ACCESS_BACKGROUND_LOCATION。 -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+</manifest>
