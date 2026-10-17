@@ -16,7 +16,9 @@ nawu-flyme/
 │   ├── server/                  服务端工程（PHP 7.2~8.0 + MySQL，零第三方依赖）
 │   ├── tools/sync-web-to-server.mjs   前端产物 → 服务端，一条命令同步
 │   └── 编译部署与迭代.md          ★ 完整操作手册，照它做即可
-├── v1.0.34/                     同上（当前最新）
+├── v1.0.34/
+├── v1.0.35/
+├── v1.0.36/                     同上（当前最新）
 └── README.md                    本文件
 ```
 
@@ -24,10 +26,27 @@ nawu-flyme/
 
 ---
 
+## 📦 按版本单独下载（不用整仓下载）
+
+每个版本都打了一个独立的 zip 挂在 **Releases** 里，按需只下载你要的那一个：
+
+| 版本 | 独立下载 |
+|---|---|
+| v1.0.36 | [nawu-flyme-v1.0.36.zip](https://github.com/lingli00/nawu-flyme/releases/download/v1.0.36/nawu-flyme-v1.0.36.zip) |
+| v1.0.35 | [nawu-flyme-v1.0.35.zip](https://github.com/lingli00/nawu-flyme/releases/download/v1.0.35/nawu-flyme-v1.0.35.zip) |
+| v1.0.34 | [nawu-flyme-v1.0.34.zip](https://github.com/lingli00/nawu-flyme/releases/download/v1.0.34/nawu-flyme-v1.0.34.zip) |
+| v1.0.33 | [nawu-flyme-v1.0.33.zip](https://github.com/lingli00/nawu-flyme/releases/download/v1.0.33/nawu-flyme-v1.0.33.zip) |
+
+zip 内即是该版本目录的内容（`app/`、`server/`、`tools/`、`编译部署与迭代.md`），解压即用。历史版本请在 [Releases 页](https://github.com/lingli00/nawu-flyme/releases) 挑选。
+
+---
+
 ## 版本索引
 
 | 版本 | 主要变化 | 目录 |
 |---|---|---|
+| **v1.0.36** | ①**服务端在线更新**：后台一键检查/更新/回滚（manifest 驱动，下载→sha256 校验→备份→解包→应用→清理→自检，协作式分片断点续跑，含数据库迁移），不用再登宝塔；②**App 应用内更新**：官方频道优先 + 增量补丁（NAWU-PATCH1，1.0.35→1.0.36 仅 3.2MB），频道不可达自动回退用户自己的服务器；③后台新增 **App 发布管理**（上传 APK 即更新 manifest，历史版本可回退）；④安全：SSRF 端口白名单参数化、解包路径双保险（safeRelPath + realpath） | [`v1.0.36/`](./v1.0.36) |
+| **v1.0.35** | ①报表页「结余/净额」负号修正（此前 -47.59 显示成 47.59 引发误读）+ 点「结余」弹出口径解释；②净值趋势支持点选每期明细与「怎么读」说明，图表有反馈；③生活流无支出占位改为**每日一言**（按日期轮换）；④置物墙改为全屏子页（去掉底部 TabBar，与其它子页一致）；⑤根治「键盘页退出→后台切回后底部大留白」（原生 onResume 复位 WebView 高度 + JS 双拍兜底） | [`v1.0.35/`](./v1.0.35) |
 | **v1.0.34** | 补齐**导入备份**功能：用户端「选择 .flyme 文件 → 解密 → 预览 → 恢复到本机」（无需登录即可导入未加密备份），后台管理端新增「导入备份」（合并 / 覆盖两种模式，表名与列名双白名单 + 事务） | [`v1.0.34/`](./v1.0.34) |
 | **v1.0.33** | 安全加固：修复服务端与 App 端共 27 项安全风险（越权访问、注入、凭据与日志泄露、接口防刷、上传与路径校验等），加固签名与构建流程。界面与功能与 v1.0.32 一致，可覆盖安装 | [`v1.0.33/`](./v1.0.33) |
 
@@ -98,12 +117,12 @@ node tools/sync-web-to-server.mjs
 
 ---
 
-## 版本速览（v1.0.34）
+## 版本速览（v1.0.36）
 
 | 项 | 值 |
 |---|---|
-| App 版本 | `1.0.34`（versionCode `42`） |
-| 网页版版本 | `1.0.34`（`server/assets/`） |
+| App 版本 | `1.0.36`（versionCode `44`） |
+| 网页版版本 | `1.0.36`（`server/assets/`） |
 | 包名 / applicationId | `com.guifou.app` |
 | 数据表前缀 | `flyme_` |
 | Node / JDK / Android SDK | Node ≥ 20、JDK 17、compileSdk 35 |
