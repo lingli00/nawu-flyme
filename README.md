@@ -139,7 +139,7 @@ node tools/sync-web-to-server.mjs
 
 ---
 
-## 版本速览（v1.1.3）
+## 版本速览（v1.1.7）
 
 | 项 | 值 |
 |---|---|
