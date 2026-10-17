@@ -18,7 +18,8 @@ nawu-flyme/
 │   └── 编译部署与迭代.md          ★ 完整操作手册，照它做即可
 ├── v1.0.34/
 ├── v1.0.35/
-├── v1.0.36/                     同上（当前最新）
+├── v1.0.36/
+├── v1.1/                       同上（当前最新）
 └── README.md                    本文件
 ```
 
@@ -32,6 +33,7 @@ nawu-flyme/
 
 | 版本 | 独立下载 |
 |---|---|
+| v1.1 | [nawu-flyme-v1.1.zip](https://github.com/lingli00/nawu-flyme/releases/download/v1.1/nawu-flyme-v1.1.zip) |
 | v1.0.36 | [nawu-flyme-v1.0.36.zip](https://github.com/lingli00/nawu-flyme/releases/download/v1.0.36/nawu-flyme-v1.0.36.zip) |
 | v1.0.35 | [nawu-flyme-v1.0.35.zip](https://github.com/lingli00/nawu-flyme/releases/download/v1.0.35/nawu-flyme-v1.0.35.zip) |
 | v1.0.34 | [nawu-flyme-v1.0.34.zip](https://github.com/lingli00/nawu-flyme/releases/download/v1.0.34/nawu-flyme-v1.0.34.zip) |
@@ -45,6 +47,7 @@ zip 内即是该版本目录的内容（`app/`、`server/`、`tools/`、`编译�
 
 | 版本 | 主要变化 | 目录 |
 |---|---|---|
+| **v1.1** | ①**备份加密**：后台「数据备份/全站备份」导出改为 .flyme 加密容器（FLYME1：PBKDF2 20 万次 + AES-256-GCM，与用户端导出同格式防窃取），导入需同一密码、先本地解密预览再确认，服务端表名/列名白名单 + 事务回滚；②**修复昵称不同步**：管理后台用户列表/名册现在能看到用户端设置的昵称（profiles 单一事实源 + 保存广播同步）；③账号页**移除套餐/会员显示**（纯免费无会员模式）；④正式版本号升至 **1.1**（versionCode 45） | [`v1.1/`](./v1.1) |
 | **v1.0.36** | ①**服务端在线更新**：后台一键检查/更新/回滚（manifest 驱动，下载→sha256 校验→备份→解包→应用→清理→自检，协作式分片断点续跑，含数据库迁移），不用再登宝塔；②**App 应用内更新**：官方频道优先 + 增量补丁（NAWU-PATCH1，1.0.35→1.0.36 仅 3.2MB），频道不可达自动回退用户自己的服务器；③后台新增 **App 发布管理**（上传 APK 即更新 manifest，历史版本可回退）；④安全：SSRF 端口白名单参数化、解包路径双保险（safeRelPath + realpath） | [`v1.0.36/`](./v1.0.36) |
 | **v1.0.35** | ①报表页「结余/净额」负号修正（此前 -47.59 显示成 47.59 引发误读）+ 点「结余」弹出口径解释；②净值趋势支持点选每期明细与「怎么读」说明，图表有反馈；③生活流无支出占位改为**每日一言**（按日期轮换）；④置物墙改为全屏子页（去掉底部 TabBar，与其它子页一致）；⑤根治「键盘页退出→后台切回后底部大留白」（原生 onResume 复位 WebView 高度 + JS 双拍兜底） | [`v1.0.35/`](./v1.0.35) |
 | **v1.0.34** | 补齐**导入备份**功能：用户端「选择 .flyme 文件 → 解密 → 预览 → 恢复到本机」（无需登录即可导入未加密备份），后台管理端新增「导入备份」（合并 / 覆盖两种模式，表名与列名双白名单 + 事务） | [`v1.0.34/`](./v1.0.34) |
@@ -117,12 +120,12 @@ node tools/sync-web-to-server.mjs
 
 ---
 
-## 版本速览（v1.0.36）
+## 版本速览（v1.1）
 
 | 项 | 值 |
 |---|---|
-| App 版本 | `1.0.36`（versionCode `44`） |
-| 网页版版本 | `1.0.36`（`server/assets/`） |
+| App 版本 | `1.1`（versionCode `45`） |
+| 网页版版本 | `1.1`（`server/assets/`） |
 | 包名 / applicationId | `com.guifou.app` |
 | 数据表前缀 | `flyme_` |
 | Node / JDK / Android SDK | Node ≥ 20、JDK 17、compileSdk 35 |
