@@ -1,0 +1,111 @@
+apply plugin: 'com.android.application'
+
+android {
+    namespace "com.guifou.app"
+    compileSdk rootProject.ext.compileSdkVersion
+    buildToolsVersion "35.0.0"
+    defaultConfig {
+        applicationId "com.guifou.app"
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        versionCode 46
+        versionName "1.1.1"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        aaptOptions {
+             // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
+             // Default: https://android.googlesource.com/platform/frameworks/base/+/282e181b58cf72b6ca770dc7ca5f91f135444502/tools/aapt/AaptAssets.cpp#61
+            ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
+        }
+    }
+    /* v1.0.11 起固定签名（PKCS12），debug/release 统一用同一把 key，
+     * 版本间可直接覆盖升级。
+     *
+     * ★v1.0.33 安全修复：签名口令不再硬编码在构建脚本里。
+     *   旧版把 storePassword/keyPassword 明文写在 build.gradle 中，源码包
+     *   一发出去密钥口令就随之泄露；且 nawu-release.p12 曾随仓库分发，
+     *   两者组合意味着「任何人都能用同一把 key 签发假冒升级包」。
+     *   现在口令一律从 gradle.properties / 环境变量读取（见
+     *   android/gradle.properties.template），未配置时：
+     *     - release 构建：直接报错并给出配置指引（绝不静默用默认口令）；
+     *     - debug 构建：回落 Android SDK 自动生成的 debug 签名，不影响开发调试。
+     *
+     * ⚠️ 运维必做：既然旧口令已随源码泄露，请重新生成一把签名密钥
+     *   （keytool -genkeypair 新建 .p12），在 Google Play / 应用分发渠道
+     *   完成签名迁移，并把旧 key 作废。仅改构建脚本不换 key，
+     *   拿到旧 key+旧口令的人依然能签发可覆盖安装的包。 */
+    signingConfigs {
+        release {
+            def nawuStoreFile     = project.findProperty('NAWU_STORE_FILE') ?: System.getenv('NAWU_STORE_FILE')
+            def nawuStorePassword = project.findProperty('NAWU_STORE_PASSWORD') ?: System.getenv('NAWU_STORE_PASSWORD')
+            def nawuKeyAlias      = project.findProperty('NAWU_KEY_ALIAS') ?: System.getenv('NAWU_KEY_ALIAS')
+            def nawuKeyPassword   = project.findProperty('NAWU_KEY_PASSWORD') ?: System.getenv('NAWU_KEY_PASSWORD')
+            def wantRelease = project.gradle.startParameter.taskNames.any { it.toLowerCase().contains('release') }
+
+            if (nawuStoreFile && nawuStorePassword && nawuKeyAlias && nawuKeyPassword) {
+                storeFile file(nawuStoreFile)
+                storePassword nawuStorePassword
+                storeType 'PKCS12'
+                keyAlias nawuKeyAlias
+                keyPassword nawuKeyPassword
+            } else if (wantRelease) {
+                throw new GradleException(
+                    "缺少 APK 签名配置。请在 android/gradle.properties 或环境变量中设置：\n" +
+                    "  NAWU_STORE_FILE / NAWU_STORE_PASSWORD / NAWU_KEY_ALIAS / NAWU_KEY_PASSWORD\n" +
+                    "（模板见 android/gradle.properties.template；不要把口令提交进仓库）"
+                )
+            }
+        }
+    }
+    buildTypes {
+        debug {
+            // 仅在配置了签名口令时才与 release 共用固定 key；否则用 SDK debug 签名
+            if (signingConfigs.release.storeFile) {
+                signingConfig signingConfigs.release
+            }
+        }
+        release {
+            signingConfig signingConfigs.release
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+    // Capacitor 7 + AGP 8 要求 JDK 17
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    // v1.0.36：AGP 8 默认不生成 BuildConfig，ApkUpdatePlugin 要读
+    // VERSION_NAME/VERSION_CODE 做「当前版本」上报，这里显式打开
+    buildFeatures {
+        buildConfig true
+    }
+}
+
+repositories {
+    flatDir{
+        dirs '../capacitor-cordova-android-plugins/src/main/libs', 'libs'
+    }
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation "androidx.appcompat:appcompat:$androidxAppCompatVersion"
+    implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
+    implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
+    implementation project(':capacitor-android')
+    testImplementation "junit:junit:$junitVersion"
+    androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
+    androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
+    implementation project(':capacitor-cordova-android-plugins')
+}
+
+apply from: 'capacitor.build.gradle'
+
+try {
+    def servicesJSON = file('google-services.json')
+    if (servicesJSON.text) {
+        apply plugin: 'com.google.gms.google-services'
+    }
+} catch(Exception e) {
+    logger.info("google-services.json not found, google-services plugin not applied. Push Notifications won't work")
+}
