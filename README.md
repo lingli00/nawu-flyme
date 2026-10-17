@@ -20,7 +20,8 @@ nawu-flyme/
 ├── v1.0.35/
 ├── v1.0.36/
 ├── v1.1/
-├── v1.1.1/                   同上（当前最新）
+├── v1.1.1/
+├── v1.1.2/                   同上（当前最新）
 └── README.md                    本文件
 ```
 
@@ -34,6 +35,7 @@ nawu-flyme/
 
 | 版本 | 独立下载 |
 |---|---|
+| v1.1.2 | [nawu-flyme-v1.1.2.zip](https://github.com/lingli00/nawu-flyme/releases/download/v1.1.2/nawu-flyme-v1.1.2.zip) |
 | v1.1.1 | [nawu-flyme-v1.1.1.zip](https://github.com/lingli00/nawu-flyme/releases/download/v1.1.1/nawu-flyme-v1.1.1.zip) |
 | v1.1 | [nawu-flyme-v1.1.zip](https://github.com/lingli00/nawu-flyme/releases/download/v1.1/nawu-flyme-v1.1.zip) |
 | v1.0.36 | [nawu-flyme-v1.0.36.zip](https://github.com/lingli00/nawu-flyme/releases/download/v1.0.36/nawu-flyme-v1.0.36.zip) |
@@ -49,6 +51,7 @@ zip 内即是该版本目录的内容（`app/`、`server/`、`tools/`、`编译�
 
 | 版本 | 主要变化 | 目录 |
 |---|---|---|
+| **v1.1.2** | ①**修复应用内更新完全不可用**（v1.0.36~v1.1.1 通杀）：`ApkUpdatePlugin` 是 App 本地类（非 npm 包），Capacitor 不会自动注册本地插件，`MainActivity` 漏写 `registerPlugin(ApkUpdatePlugin.class)`，点「立即更新」被桥接层拒绝、报「当前环境不支持应用内更新」——应用内更新链自 v1.0.36 上线起从未在真机跑通（此前被官方频道地址 bug 掩盖）；v1.1.2 修复注册时序（必须在 `super.onCreate()` 之前）并让错误信息透出底层原因；②**修复网页版双入口 bundle**：`spa-m.html` 入口块同步正则从未匹配成功，线上曾同时加载两个版本的 chunk，现正则修复并清理残留；③含 v1.1.1/v1.1 全部内容 | [`v1.1.2/`](./v1.1.2) |
 | **v1.1.1** | ①**修复官方更新频道地址 bug**：App 检查更新时请求地址被归一化逻辑剥掉了 `/nawu-update/` 目录，实际拿到的是网页首页而非频道清单，导致官方频道（含 3.2MB 增量补丁）自上线起从未生效、一直提示「已是最新」；现已修复，官方频道恢复优先；②**服务端默认更新源修正**：此前误用脱敏副本打包上线，默认源变成 `127.0.0.1:2233` 被 SSRF 拦截（「连不上更新源」），现改回真实地址并明确「线上包必须从未脱敏源码树出」；③含 v1.1 全部内容（备份 .flyme 加密、昵称同步、移除套餐显示） | [`v1.1.1/`](./v1.1.1) |
 | **v1.1** | ①**备份加密**：后台「数据备份/全站备份」导出改为 .flyme 加密容器（FLYME1：PBKDF2 20 万次 + AES-256-GCM，与用户端导出同格式防窃取），导入需同一密码、先本地解密预览再确认，服务端表名/列名白名单 + 事务回滚；②**修复昵称不同步**：管理后台用户列表/名册现在能看到用户端设置的昵称（profiles 单一事实源 + 保存广播同步）；③账号页**移除套餐/会员显示**（纯免费无会员模式）；④正式版本号升至 **1.1**（versionCode 45） | [`v1.1/`](./v1.1) |
 | **v1.0.36** | ①**服务端在线更新**：后台一键检查/更新/回滚（manifest 驱动，下载→sha256 校验→备份→解包→应用→清理→自检，协作式分片断点续跑，含数据库迁移），不用再登宝塔；②**App 应用内更新**：官方频道优先 + 增量补丁（NAWU-PATCH1，1.0.35→1.0.36 仅 3.2MB），频道不可达自动回退用户自己的服务器；③后台新增 **App 发布管理**（上传 APK 即更新 manifest，历史版本可回退）；④安全：SSRF 端口白名单参数化、解包路径双保险（safeRelPath + realpath） | [`v1.0.36/`](./v1.0.36) |
@@ -123,12 +126,12 @@ node tools/sync-web-to-server.mjs
 
 ---
 
-## 版本速览（v1.1.1）
+## 版本速览（v1.1.2）
 
 | 项 | 值 |
 |---|---|
-| App 版本 | `1.1.1`（versionCode `46`） |
-| 网页版版本 | `1.1.1`（`server/assets/`） |
+| App 版本 | `1.1.2`（versionCode `47`） |
+| 网页版版本 | `1.1.2`（`server/assets/`） |
 | 包名 / applicationId | `com.guifou.app` |
 | 数据表前缀 | `flyme_` |
 | Node / JDK / Android SDK | Node ≥ 20、JDK 17、compileSdk 35 |

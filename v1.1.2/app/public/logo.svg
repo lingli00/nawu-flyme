@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <!-- 纳物 NaWu 品牌标（v1.0.33 P2-12）：「纳」= 纳入 —— 上方落入下方容器，外框圆角方形容器 -->
+  <rect x="2.2" y="2.2" width="27.6" height="27.6" rx="9" fill="#3f7d67"/>
+  <g fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9.5 18.5h13v3a2.5 2.5 0 0 1-2.5 2.5h-8a2.5 2.5 0 0 1-2.5-2.5z"/>
+    <path d="M16 7.5v6.8"/>
+    <path d="M12.8 11.6 16 14.9l3.2-3.3"/>
+  </g>
+</svg>
