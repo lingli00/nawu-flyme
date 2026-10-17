@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportHeight="108"
+    android:viewportWidth="108">
+    <!-- ★v1.1.3 自有品牌标 BrandMark（白描边）：外框容器 + 上开口托盘 + 下落箭头。
+         几何与 src/components/BrandMark.tsx / public/logo.svg 同源（32 视图），
+         按 2.3 倍缩放居中于自适应图标安全区（108 视口中心 72×72）。原下载的
+         「白杯子」矢量与品牌无关，已废弃。 -->
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M 42.96 22.26 L 65.04 22.26 A 20.7 20.7 0 0 1 85.74 42.96 L 85.74 65.04 A 20.7 20.7 0 0 1 65.04 85.74 L 42.96 85.74 A 20.7 20.7 0 0 1 22.26 65.04 L 22.26 42.96 A 20.7 20.7 0 0 1 42.96 22.26 Z"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="4.6"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M 39.05 59.75 L 68.95 59.75 L 68.95 65.5 A 5.75 5.75 0 0 1 63.2 71.25 L 44.8 71.25 A 5.75 5.75 0 0 1 39.05 65.5 Z"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="4.6"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M 54 34.45 L 54 50.09"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="4.6"
+        android:strokeLineCap="round" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M 46.64 43.88 L 54 51.47 L 61.36 43.88"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="4.6"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+</vector>

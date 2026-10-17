@@ -1,0 +1,49 @@
+# 依赖
+node_modules/
+
+# 构建产物
+dist/
+dist-ssr/
+dist_prev*/
+.vite/
+coverage/
+
+# Vite 加载配置失败时留下的临时文件
+vite.config.ts.timestamp-*.mjs
+
+# 原生工程中间产物（保留 android/ 源码，忽略编译输出）
+android/build/
+android/app/build/
+android/.gradle/
+android/local.properties
+android/.idea/
+*.apk
+*.aab
+
+# 环境变量
+.env
+.env.local
+.env.*.local
+
+# ---------------------------------------------------------------
+# 签名密钥与构建凭据（v1.0.33 安全修复新增）
+# 起因：旧版 nawu-release.p12 曾随仓库分发、口令硬编码在 build.gradle，
+#       且 android/.gitignore 里的密钥库忽略规则是注释状态 —— 等于把
+#       「签发正版升级包」的能力公开。以下规则确保以后不会再犯。
+# 注意：android/gradle.properties 是 Capacitor 生成的常规文件（只放 JVM 参数），
+#       仍会被跟踪；只要不往里写口令即可。口令请放 ~/.gradle/gradle.properties
+#       （仓库外，永不提交）或走环境变量。
+# ---------------------------------------------------------------
+*.p12
+*.jks
+*.keystore
+*.pepk
+keystore.properties
+android/keystore.properties
+
+# 编辑器 / 系统
+.vscode/
+.DS_Store
+Thumbs.db
+*.log
+npm-debug.log*
