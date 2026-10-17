@@ -24,11 +24,15 @@ import { BrandMark } from './components/BrandMark';
  * 修复：resume 时 ① 重设一次 resize 模式强制原生侧重新计算布局；
  * ② 显式把 body/html 高度复位并强制 reflow；③ 广播 resize 事件让依赖
  * 视口的功能（报表图表等）重算。
+ *
+ * ★v1.0.35 增强：v1.0.16 的单次 250ms 修复在部分机型上跑早了（原生布局
+ * 尚未稳定，又被后续一帧写回收窄值），改为 250ms + 800ms 两拍；配合
+ * MainActivity.onResume 的原生侧高度复位双保险，根治底部大留白。
  */
 function useKeyboardResumeFix(): void {
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
-    const fix = (): void => {
+    const once = (delay: number): void => {
       window.setTimeout(() => {
         // ① 原生侧重应用 resize 模式（重算 WebView inset / body 高度）
         const mode = 'body' as KeyboardResize;
@@ -41,7 +45,11 @@ function useKeyboardResumeFix(): void {
         void document.body.offsetHeight; // 读 offset 强制同步重排
         // ③ 广播 resize（图表/虚拟键盘感知组件重算）
         window.dispatchEvent(new Event('resize'));
-      }, 250);
+      }, delay);
+    };
+    const fix = (): void => {
+      once(250);
+      once(800);
     };
     const sub = CapApp.addListener('appStateChange', (s) => {
       if (s.isActive) fix();

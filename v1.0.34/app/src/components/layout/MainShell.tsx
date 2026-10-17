@@ -24,8 +24,11 @@ const TABS: Array<{ to: string; label: string; Icon: LucideIcon }> = [
   { to: '/me', label: '我的', Icon: User },
 ];
 
-/** 这些路由属于主壳内页面，其余子页（详情/编辑/设置…）全屏显示。 */
-const SHELL_PATHS = new Set(['/home', '/ledger', '/report', '/me', '/wall']);
+/** 这些路由属于主壳内页面，其余子页（详情/编辑/设置…）全屏显示。
+ *  ★v1.0.35：/wall 移出——置物墙是从「我的」进入的子页，此前却是唯一
+ *  带底部 TabBar 的子页，观感上不像「我的」里的小页面；移出后与其他
+ *  子页（备份/分类/设置）一致：全屏 PageShell + 返回箭头。 */
+const SHELL_PATHS = new Set(['/home', '/ledger', '/report', '/me']);
 
 /* ---------------- 壳模式偏好（手动切换手机版 / 电脑版） ---------------- */
 

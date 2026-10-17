@@ -61,6 +61,19 @@ export function formatSignedMoney(amount: number, type: 'expense' | 'income', cu
   return `${sign}${symbolOf(currency)}${formatAmount(Math.abs(amount))}`;
 }
 
+/**
+ * 净额带符号（★v1.0.35）：`+¥120` / `-¥47.59` / `¥0`。
+ *
+ * 此前报表「结余/净额」直接用 formatMoney（默认不带符号），负值被显示成
+ * 正数金额——用户看到红色「结余 ¥47.59」却理解成「还剩 47.59」，实为
+ * -47.59（支出多于收入）。统一改用本函数显示方向。
+ */
+export function formatNetMoney(amount: number, currency: string = 'CNY'): string {
+  const n = Number.isFinite(amount) ? amount : 0;
+  if (Math.abs(n) < 0.005) return `${symbolOf(currency)}0`;
+  return `${n > 0 ? '+' : '-'}${symbolOf(currency)}${formatAmount(Math.abs(n))}`;
+}
+
 /** 紧凑写法：12000 → `1.2万`（概览卡片用）。 */
 export function formatCompactMoney(amount: number, currency: string = 'CNY'): string {
   const n = Math.abs(Number.isFinite(amount) ? amount : 0);

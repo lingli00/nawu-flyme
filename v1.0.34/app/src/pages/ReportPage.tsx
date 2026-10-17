@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { Brain, Heart, Hourglass, Snowflake, Sprout } from 'lucide-react';
 import CategoryGlyph from '../components/CategoryGlyph';
 import { cooldownExpired } from '../components/LifeSheets';
@@ -7,7 +7,7 @@ import { useDataStore, useSettingsStore } from '../store';
 import { categoryShare, judgementBreakdown } from '../domain/stats';
 import type { CategorySlice } from '../domain/stats';
 import { ofMonth, sumExpense, sumIncome } from '../domain/ledger';
-import { formatMoney, formatCompactMoney } from '../lib/money';
+import { formatMoney, formatCompactMoney, formatNetMoney } from '../lib/money';
 import { haptic } from '../lib/haptics';
 import { addDays, fmtDate, lastNDays, lastNMonths, monthKey, monthLabel, nextMonth, prevMonth, relativeDayLabel, today } from '../lib/date';
 import type { ValueRecord } from '../types/entities';
@@ -79,13 +79,21 @@ function Donut({ slices, total }: { slices: CategorySlice[]; total: number }) {
  * 正 → var(--gui)，负 → var(--fou)；零轴虚线参考。
  * SVG 用 preserveAspectRatio="none" 撑满容器宽度，所有描边加
  * vector-effect="non-scaling-stroke"，避免横向拉伸把线宽也拉变形。
+ *
+ * ★v1.0.35：新增点击反馈——每期一个透明热区，点中后落点显示圆点，
+ * 下方给出该期「收入/支出/净额」明细；默认提示可点。负号修正
+ * （formatNetMoney），此前 -47.59 被显示成 47.59。
  */
 function NetTrend({
   points,
   currency,
+  selectedKey,
+  onSelect,
 }: {
-  points: Array<{ key: string; label: string; net: number }>;
+  points: Array<{ key: string; label: string; net: number; expense: number; income: number }>;
   currency: string;
+  selectedKey: string | null;
+  onSelect: (key: string | null) => void;
 }) {
   const W = 320;
   const H = 92;
@@ -101,6 +109,7 @@ function NetTrend({
   const last = nets[nets.length - 1] ?? 0;
   const color = last >= 0 ? 'var(--gui)' : 'var(--fou)';
   const total = Math.round(nets.reduce((a, b) => a + b, 0) * 100) / 100;
+  const selected = points.find((p) => p.key === selectedKey) ?? null;
 
   return (
     <div>
@@ -144,10 +153,41 @@ function NetTrend({
             vectorEffect="non-scaling-stroke"
           />
         ))}
+        {/* ★v1.0.35：选中期的落点 */}
+        {selected ? (
+          <circle
+            cx={PAD + points.findIndex((p) => p.key === selected.key) * stepX}
+            cy={yOf(selected.net)}
+            r={4}
+            fill={color}
+            stroke="var(--surface)"
+            strokeWidth={2}
+            vectorEffect="non-scaling-stroke"
+          />
+        ) : null}
+        {/* ★v1.0.35：透明点击热区（每期一列，覆盖整高） */}
+        {points.map((p, i) => (
+          <rect
+            key={`hit-${p.key}`}
+            x={PAD + Math.max(0, i * stepX - stepX / 2)}
+            y={0}
+            width={Math.max(stepX, W / points.length)}
+            height={H}
+            fill="transparent"
+            className="cursor-pointer"
+            onClick={() => onSelect(selectedKey === p.key ? null : p.key)}
+          />
+        ))}
       </svg>
       <div className="mt-1 flex justify-between px-1">
         {points.map((p) => (
-          <span key={p.key} className="truncate text-[11px] text-ink-3">
+          <span
+            key={p.key}
+            role="button"
+            tabIndex={0}
+            onClick={() => onSelect(selectedKey === p.key ? null : p.key)}
+            className={`cursor-pointer truncate text-[11px] ${selectedKey === p.key ? 'font-semibold text-ink-2' : 'text-ink-3'}`}
+          >
             {p.label}
           </span>
         ))}
@@ -156,14 +196,19 @@ function NetTrend({
         <span>
           本期净额{' '}
           <b style={{ color }}>
-            {last >= 0 ? '+' : ''}
-            {formatMoney(last, currency)}
+            {formatNetMoney(last, currency)}
           </b>
         </span>
         <span>
-          区间累计 <b className="text-ink-2">{formatMoney(total, currency)}</b>
+          区间累计 <b className="text-ink-2">{formatNetMoney(total, currency)}</b>
         </span>
       </div>
+      {/* ★v1.0.35：点击反馈明细（与柱状图同款交互） */}
+      <p className="mt-2 rounded-btn bg-surface-2 px-3 py-2 text-[11px] text-ink-3">
+        {selected
+          ? `${selected.label}：收入 ${formatMoney(selected.income, currency)} · 支出 ${formatMoney(selected.expense, currency)} · 净额 ${formatNetMoney(selected.net, currency)}${selected.net < 0 ? '（花得比收得多）' : ''}`
+          : '点折线或月份，看该期收/支与净额明细'}
+      </p>
     </div>
   );
 }
@@ -220,11 +265,18 @@ export default function ReportPage() {
 
   const maxBar = Math.max(...trend.map((b) => Math.max(b.expense, b.income)), 1);
 
-  /** v1.0.21 · M3.2：净值序列（收入 − 支出），供折线图使用。 */
+  /** v1.0.21 · M3.2：净值序列（收入 − 支出），供折线图使用。
+   *  ★v1.0.35：带上 expense/income，点选折线时展示单期明细。 */
   const netPoints = useMemo(
-    () => trend.map((b) => ({ key: b.key, label: b.label, net: Math.round((b.income - b.expense) * 100) / 100 })),
+    () => trend.map((b) => ({ key: b.key, label: b.label, net: Math.round((b.income - b.expense) * 100) / 100, expense: b.expense, income: b.income })),
     [trend],
   );
+
+  /** ★v1.0.35：净值趋势点选（null = 未选中，显示提示文案）。 */
+  const [netSel, setNetSel] = useState<string | null>(null);
+  useEffect(() => {
+    setNetSel(null);
+  }, [grain, day, ym, year]);
 
   /** 粒度切换器的 ‹ › 步进。 */
   const step = (dir: -1 | 1) => {
@@ -279,6 +331,13 @@ export default function ReportPage() {
   const [barKey, setBarKey] = useState<string | null>(null);
   const shownBar = useMemo(() => trend.find((b) => b.key === barKey) ?? null, [trend, barKey]);
   const currentKey = grain === 'day' ? day : grain === 'month' ? ym : '';
+  /** ★v1.0.35：「结余」口径解释展开态。 */
+  const [netOpen, setNetOpen] = useState(false);
+  useEffect(() => {
+    setNetOpen(false);
+  }, [grain, day, ym, year]);
+  /** ★v1.0.35：净值趋势「怎么读」展开态。 */
+  const [netHow, setNetHow] = useState(false);
 
   /* ★v1.0.33 P0-4：中间档改用 --tint-warm 令牌（原写死 #c98a2d）。 */
   const healthTint =
@@ -350,22 +409,43 @@ export default function ReportPage() {
           ))}
         </div>
 
-        {/* ★v1.0.33：顶部概览条——此前页头只有标题+小字，下方留白显得空落 */}
-        <div className="page-enter grid grid-cols-3 gap-2 rounded-card border border-line bg-surface p-3 dt:col-span-12">
-          <div className="text-center">
-            <p className="text-[11px] text-ink-3">支出</p>
-            <p className="tnum mt-0.5 text-base font-semibold">{formatMoney(expense, currency)}</p>
+        {/* ★v1.0.33：顶部概览条——此前页头只有标题+小字，下方留白显得空落
+            ★v1.0.35：① 结余改带符号显示（此前 -47.59 显示成 47.59，红字让人
+            误读成「还剩 47.59」）；② 点「结余」展开口径解释。 */}
+        <div className="page-enter rounded-card border border-line bg-surface p-3 dt:col-span-12">
+          <div className="grid grid-cols-3 gap-2">
+            <div className="text-center">
+              <p className="text-[11px] text-ink-3">支出</p>
+              <p className="tnum mt-0.5 text-base font-semibold">{formatMoney(expense, currency)}</p>
+            </div>
+            <div className="border-x border-line-2 text-center">
+              <p className="text-[11px] text-ink-3">收入</p>
+              <p className="tnum mt-0.5 text-base font-semibold">{formatMoney(income, currency)}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setNetOpen((v) => !v)}
+              aria-expanded={netOpen}
+              className="text-center transition-opacity active:opacity-60"
+            >
+              <p className="text-[11px] text-ink-3">
+                结余
+                <span className="ml-0.5 inline-block h-3.5 w-3.5 rounded-full border border-line-2 text-[9px] leading-[13px] text-ink-3">?</span>
+              </p>
+              <p className="tnum mt-0.5 text-base font-semibold" style={{ color: income - expense >= 0 ? 'var(--gui)' : 'var(--fou)' }}>
+                {formatNetMoney(income - expense, currency)}
+              </p>
+            </button>
           </div>
-          <div className="border-x border-line-2 text-center">
-            <p className="text-[11px] text-ink-3">收入</p>
-            <p className="tnum mt-0.5 text-base font-semibold">{formatMoney(income, currency)}</p>
-          </div>
-          <div className="text-center">
-            <p className="text-[11px] text-ink-3">结余</p>
-            <p className="tnum mt-0.5 text-base font-semibold" style={{ color: income - expense >= 0 ? 'var(--gui)' : 'var(--fou)' }}>
-              {formatMoney(income - expense, currency)}
+          {netOpen ? (
+            <p className="mt-2 rounded-btn bg-surface-2 px-3 py-2 text-[11px] leading-5 text-ink-3">
+              <b className="text-ink-2">结余 = 收入 − 支出</b>＝ {formatMoney(income, currency)} − {formatMoney(expense, currency)} ＝{' '}
+              {formatNetMoney(income - expense, currency)}。
+              {income - expense < 0
+                ? '没有收入记录时，结余就等于 −支出：红字表示「这个周期花出去的钱」，不是你还欠了多少。'
+                : '绿字表示这个周期收进来的比花出去的多。'}
             </p>
-          </div>
+          ) : null}
         </div>
 
         {/* 分类环图 */}
@@ -596,20 +676,33 @@ export default function ReportPage() {
           </div>
           <p className="mt-2 text-[11px] text-ink-3">
             {shownBar
-              ? `${shownBar.label}：支出 ${formatMoney(shownBar.expense, currency)} · 收入 ${formatMoney(shownBar.income, currency)} · 结余 ${formatMoney(shownBar.income - shownBar.expense, currency)}`
+              ? `${shownBar.label}：支出 ${formatMoney(shownBar.expense, currency)} · 收入 ${formatMoney(shownBar.income, currency)} · 结余 ${formatNetMoney(shownBar.income - shownBar.expense, currency)}`
               : '点柱子看该期收支金额'}
           </p>
         </div>
 
-        {/* v1.0.21 · M3.2：净值趋势（收入 − 支出）；v1.0.33 起置于最后 */}
+        {/* v1.0.21 · M3.2：净值趋势（收入 − 支出）；v1.0.33 起置于最后
+            ★v1.0.35：可点选每期看明细 + 「怎么读」解释（点击反馈） */}
         <div className="page-enter rounded-card border border-line bg-surface p-4 dt:col-span-12">
           <div className="flex items-baseline justify-between">
             <h2 className="text-sm font-semibold dt:text-[15px]">净值趋势</h2>
             <p className="text-[11px] text-ink-3">{trendTitle.replace('趋势', '')} · 收入 − 支出</p>
           </div>
           <div className="mt-3">
-            <NetTrend points={netPoints} currency={currency} />
+            <NetTrend points={netPoints} currency={currency} selectedKey={netSel} onSelect={setNetSel} />
           </div>
+          <button
+            type="button"
+            onClick={() => setNetHow((v) => !v)}
+            className="mt-2 text-[11px] text-accent active:opacity-60"
+          >
+            {netHow ? '收起说明' : '这张图怎么读？'}
+          </button>
+          {netHow ? (
+            <p className="mt-1.5 rounded-btn bg-surface-2 px-3 py-2 text-[11px] leading-5 text-ink-3">
+              <b className="text-ink-2">怎么读这张图：</b>每个点的位置是该期「收入 − 支出」的净额，线往下走说明花得比收得多（只统计生活流记账，物品与订阅不计入）。「本期净额」是离现在最近一期，「区间累计」是这几期净额的合计——它同样不是「你还剩多少钱」，而是这段时间的净流出入。
+            </p>
+          ) : null}
         </div>
       </div>
 

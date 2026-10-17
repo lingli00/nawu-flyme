@@ -1,7 +1,7 @@
 {
   "name": "nawu-app",
   "private": true,
-  "version": "1.0.34",
+  "version": "1.0.35",
   "description": "纳物 NaWu · 物品与消费复盘 Android App（Capacitor + React + Vite）",
   "type": "module",
   "engines": {

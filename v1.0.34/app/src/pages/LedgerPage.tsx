@@ -15,6 +15,7 @@ import { groupByDay, sumExpense, sumIncome } from '../domain/ledger';
 import { formatSignedMoney, formatMoney } from '../lib/money';
 import { addDays, monthKey, monthLabel, nextMonth, prevMonth, relativeDayLabel, today } from '../lib/date';
 import { haptic } from '../lib/haptics';
+import { dailyQuote } from '../lib/dailyQuote';
 import type { Judgement, ValueRecord } from '../types/entities';
 
 /** P09 生活流：按日/周/月/年粒度查看流水 + 四张生活小卡（心动清单/冷静池等）。 */
@@ -359,7 +360,12 @@ export default function LedgerPage() {
           ))}
         </div>
         {todayExpense === 0 ? (
-          <p className="mt-2.5 rounded-btn bg-surface-2 px-3 py-2 text-xs text-ink-3">暂无支出，保持空杯心态</p>
+          /* ★v1.0.35：固定占位语换成每日一言（按日期轮换，全端一致） */
+          <p className="mt-2.5 rounded-btn bg-surface-2 px-3 py-2 text-xs text-ink-3">
+            <span className="mr-1.5 rounded-full bg-surface px-1.5 py-0.5 text-[10px] font-medium text-accent">每日一言</span>
+            {dailyQuote().text}
+            {dailyQuote().from ? <span className="ml-1.5 opacity-80">—— {dailyQuote().from}</span> : null}
+          </p>
         ) : byJudgement.fou > 0 ? (
           <p className="mt-2.5 rounded-btn bg-surface-2 px-3 py-2 text-xs" style={{ color: 'var(--fou)' }}>
             今日有 {formatMoney(byJudgement.fou, currency)}「否」支出，占 {jPct('fou')}%
