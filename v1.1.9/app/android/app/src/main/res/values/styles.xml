@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!--
+      基础主题。
+      说明：不做沉浸式（windowTranslucentStatus=false），状态栏颜色在运行时由
+      @capacitor/status-bar 按深浅色设置（见 src/main.tsx 与 src/lib/theme.ts）。
+      这里刻意不引用 @color/*，避免缺少 colors.xml 时构建失败。
+    -->
+    <style name="AppTheme" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="colorPrimary">#3f7d67</item>
+        <item name="colorPrimaryDark">#346a57</item>
+        <item name="colorAccent">#3f7d67</item>
+        <item name="android:windowTranslucentStatus">false</item>
+        <item name="android:statusBarColor">#f4f5f3</item>
+        <item name="android:windowBackground">#f4f5f3</item>
+    </style>
+
+    <style name="AppTheme.NoActionBar" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+        <item name="android:background">@null</item>
+        <item name="android:windowTranslucentStatus">false</item>
+        <!-- ★v1.0.21：Android 15 对 targetSdk 35 应用强制 edge-to-edge，
+             WebView 会延伸到状态栏下导致顶栏被状态栏盖住。此处显式申请豁免，
+             让系统栏重新占位（与 capacitor.config 的 adjustMarginsForEdgeToEdge:'auto' 双保险）。 -->
+        <item name="android:windowOptOutEdgeToEdgeEnforcement">true</item>
+        <item name="android:statusBarColor">#f4f5f3</item>
+    </style>
+
+    <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
+        <item name="android:background">@drawable/splash</item>
+        <item name="android:windowTranslucentStatus">false</item>
+        <item name="android:statusBarColor">#f4f5f3</item>
+        <item name="postSplashScreenTheme">@style/AppTheme.NoActionBar</item>
+    </style>
+</resources>
