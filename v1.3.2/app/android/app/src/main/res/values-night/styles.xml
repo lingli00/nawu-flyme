@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!--
+      暗色主题覆盖（v1.1.4「01 净白印」）。
+      开屏背景 @drawable/splash 由系统自动解析到 drawable-night-* 变体；
+      此处只需把启动主题的状态栏色改为暗底，避免暗色下出现一条亮状态栏。
+    -->
+    <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
+        <item name="android:background">@drawable/splash</item>
+        <item name="android:windowTranslucentStatus">false</item>
+        <item name="android:statusBarColor">#1a1f1d</item>
+        <item name="postSplashScreenTheme">@style/AppTheme.NoActionBar</item>
+    </style>
+</resources>
