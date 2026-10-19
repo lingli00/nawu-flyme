@@ -43,6 +43,27 @@ describe('cleanNameText', () => {
     expect(cleanNameText('买了双跑鞋')).toBe('跑鞋');
     expect(cleanNameText('打车30', '30')).toBe('打车');
   });
+
+  /** ★v1.3.1：连锁店名与品类连写时品牌不能被当纯地点剥掉（账本条目只剩「咖啡」）。 */
+  it('v1.3.1 连锁品牌连写 → 品牌留在名称里', () => {
+    expect(cleanNameText('刚买了杯瑞幸咖啡花了19.9')).toBe('瑞幸咖啡');
+    expect(cleanNameText('刚买了杯星巴克咖啡花了19.9')).toBe('星巴克咖啡');
+    expect(cleanNameText('瑞幸咖啡 19.9')).toBe('瑞幸咖啡');
+    // 有「在…买了…」隔开的确实是地点 → 仍只留商品名
+    expect(cleanNameText('在星巴克买了杯咖啡花了30')).toBe('咖啡');
+    expect(cleanNameText('在淘宝买了大米')).toBe('大米');
+    // 只剩店名时不至于丢成空串
+    expect(cleanNameText('星巴克 32')).toBe('星巴克');
+  });
+
+  /** ★v1.3.1：没有「花了」的行尾裸金额不能残留在名称里（小数点被标点清洗成空格）。 */
+  it('v1.3.1 行尾裸金额剥净', () => {
+    expect(cleanNameText('买了杯瑞幸咖啡 19.9元')).toBe('瑞幸咖啡');
+    expect(cleanNameText('拿铁 18.5')).toBe('拿铁');
+    // 型号数字不是金额，必须保留
+    expect(cleanNameText('买了iPhone 15')).toBe('iPhone 15');
+    expect(cleanNameText('买了小米14 Ultra')).toBe('小米14 Ultra');
+  });
 });
 
 describe('detailsNote', () => {

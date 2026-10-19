@@ -93,13 +93,24 @@ export function cleanNameText(text: string, amountRaw?: string): string {
   // 时间词 / 人称
   s = s.replace(/(今天|昨天|前天|刚才|刚刚|刚|大前天|明天|早上|早晨|清晨|上午|中午|午间|晌午|下午|晚上|傍晚|夜里|半夜|深夜|凌晨)/g, ' ');
   s = s.replace(/(我|我们|俺|咱|你|您)/g, ' ');
-  // 地点（细节已抽进备注，名称里删掉）
+  // 地点（细节已抽进备注，名称里删掉）——★v1.3.1 记下命中的地点词：
+  // 连锁店名与品类连写时（「瑞幸咖啡」「肯德基汉堡」）品牌就是商品名的一部分，
+  // 剥掉会让账本条目只剩「咖啡」，图标匹配也丢掉品牌
+  const placeHits: string[] = [];
   PLACE_RE.lastIndex = 0;
-  s = s.replace(PLACE_RE, ' ');
+  s = s.replace(PLACE_RE, (_m, p1: string) => {
+    if (p1 && !placeHits.includes(p1)) placeHits.push(p1);
+    return ' ';
+  });
   PLACE_RE.lastIndex = 0;
   s = s.replace(PLACE_GENERIC_RE, ' ');
   // 「花了 29 块钱」金额片段
   s = s.replace(SPEND_RE, ' ');
+  // ★v1.3.1 行尾裸金额：没有「花了」的口语句式「瑞幸咖啡 19.9元」，
+  // 不剥会残留「19 9元」（小数点被标点清洗换成空格）。
+  // 只剥带货币单位或带小数点的尾部数字，「iPhone 15」这类型号不受影响。
+  s = s.replace(/\s\d{1,6}(?:[.．]\d{1,2})?\s*(?:元|块|块钱|圆)\s*$/, ' ');
+  s = s.replace(/\s\d{1,6}[.．]\d{1,2}\s*$/, ' ');
   // ★v1.3.1 行尾裸「0元」（订单截图 0 元券后订单的合成句「买了X 0元」：
   // amountRaw 只剥数字，「0元」两字会残留在名称里——「库迪咖啡 0元」→「库迪咖啡」）
   s = s.replace(/\s*(?:券后\s*)?0\s*元\s*$/, ' ');
@@ -134,7 +145,15 @@ export function cleanNameText(text: string, amountRaw?: string): string {
   }
   // 尾部虚词
   s = s.replace(/(了|的|个|一下|呀|啊|哦|哈|咯)+$/g, '').trim();
-  return s.slice(0, 24);
+  const out = s.slice(0, 24);
+  // ★v1.3.1 连锁店名与品类连写（原文里紧挨着）→ 品牌回到商品名
+  for (const p of placeHits) {
+    if (out && text.includes(p + out)) return `${p}${out}`.slice(0, 24);
+  }
+  // 只剩店名（「星巴克 32」）时名称用店名，别丢成空（纯数字残留视为金额）
+  const onlyAmount = !out || /^[\d\s.]+$/.test(out);
+  if (onlyAmount && placeHits.length) return placeHits[placeHits.length - 1];
+  return out;
 }
 
 /**
