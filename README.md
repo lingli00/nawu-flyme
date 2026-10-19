@@ -22,15 +22,7 @@ nawu-flyme/
 ├── v1.1/
 ├── v1.1.1/
 ├── v1.1.2/
-├── v1.1.3/
-├── v1.1.4/
-├── v1.1.5/
-├── v1.1.6/
-├── v1.1.7/
-├── v1.1.8/
-├── v1.1.9/
-├── v1.1.10/
-├── v1.3.0/                   同上（当前最新）
+├── v1.1.3/                   同上（当前最新）
 └── README.md                    本文件
 ```
 
@@ -44,14 +36,6 @@ nawu-flyme/
 
 | 版本 | 独立下载 |
 |---|---|
-| v1.3.0 | [nawu-flyme-v1.3.0.zip](https://github.com/lingli00/nawu-flyme/releases/download/v1.3.0/nawu-flyme-v1.3.0.zip) |
-| v1.1.10 | [nawu-flyme-v1.1.10.zip](https://github.com/lingli00/nawu-flyme/releases/download/v1.1.10/nawu-flyme-v1.1.10.zip) |
-| v1.1.9 | [nawu-flyme-v1.1.9.zip](https://github.com/lingli00/nawu-flyme/releases/download/v1.1.9/nawu-flyme-v1.1.9.zip) |
-| v1.1.8 | [nawu-flyme-v1.1.8.zip](https://github.com/lingli00/nawu-flyme/releases/download/v1.1.8/nawu-flyme-v1.1.8.zip) |
-| v1.1.7 | [nawu-flyme-v1.1.7.zip](https://github.com/lingli00/nawu-flyme/releases/download/v1.1.7/nawu-flyme-v1.1.7.zip) |
-| v1.1.6 | [nawu-flyme-v1.1.6.zip](https://github.com/lingli00/nawu-flyme/releases/download/v1.1.6/nawu-flyme-v1.1.6.zip) |
-| v1.1.5 | [nawu-flyme-v1.1.5.zip](https://github.com/lingli00/nawu-flyme/releases/download/v1.1.5/nawu-flyme-v1.1.5.zip) |
-| v1.1.4 | [nawu-flyme-v1.1.4.zip](https://github.com/lingli00/nawu-flyme/releases/download/v1.1.4/nawu-flyme-v1.1.4.zip) |
 | v1.1.3 | [nawu-flyme-v1.1.3.zip](https://github.com/lingli00/nawu-flyme/releases/download/v1.1.3/nawu-flyme-v1.1.3.zip) |
 | v1.1.2 | [nawu-flyme-v1.1.2.zip](https://github.com/lingli00/nawu-flyme/releases/download/v1.1.2/nawu-flyme-v1.1.2.zip) |
 | v1.1.1 | [nawu-flyme-v1.1.1.zip](https://github.com/lingli00/nawu-flyme/releases/download/v1.1.1/nawu-flyme-v1.1.1.zip) |
@@ -69,10 +53,6 @@ zip 内即是该版本目录的内容（`app/`、`server/`、`tools/`、`编译�
 
 | 版本 | 主要变化 | 目录 |
 |---|---|---|
-| **v1.3.0** | ①**周期统计与摊销**：报表页支持按周/月/年自定义周期做分类支出统计，附周期日均与物品每日摊销（单一口径复用 `domain/goods` 计算）；②**退役转卖自动扣减**：一句话说「相机卖了/退役」即识别，确认卡预告自动扣减金额，有净赚自动记生活流，退役即停摊销；③**图标自动匹配**：物品/订阅/生活流按名称命中品牌库（177 个本地品牌 PNG 优先，无则联网推荐），表单内推荐 + 徽标 + 一键跳图片选择页；④**口语解析增强**：修复「B站大会员」专名被啃成「B站大」，补「开了个/开通/续费」等购买动词 | [`v1.3.0/`](./v1.3.0) |
-| **v1.1.10** | ①修复 AI 记一笔把型号/规格数字误判为金额（N95、8G+128G）与分类误归；②物品名不再被抠掉型号；③修复输入法未上屏时表单存旧值 | [`v1.1.10/`](./v1.1.10) |
-| **v1.1.9** | ①我的页入口直列；②电脑端功能页改抽屉；③手机版切换入口 | [`v1.1.9/`](./v1.1.9) |
-| **v1.1.8** | ①天气胶囊；②「我的」抽屉；③桌面重排；④纳字图标 | [`v1.1.8/`](./v1.1.8) |
 | **v1.1.7** | ①**IP 定位精确到区县**：服务端自带纯真 IP 库（`server/app/data/qqwry.dat`）+ 行政区划中心点表（`geo-cn.json`），`/api/geo` 一次返回省/市/区县与经纬度，天气不再「人在桐柏显示郑州」；前端不再依赖境外 IP 接口，也不申请定位权限；②**地址收敛**：未知路径返回品牌 404 页（HTTP 404，带「回到首页」按钮），`/flyme` 直达后台，网页版不再挂管理入口；③**改账号/密码即强制重登**：登录名或密码改成功后作废该管理员全部会话，修掉改完密码调接口 404 的怪象；④**加号菜单四入口统一抽屉**：AI 记一笔 / 价值记账 / 手动录入 / 新增订阅同一套形态；⑤**更新通道留存策略**：完整包、增量包、服务端包各留最近 3 份，发布时自动清理 | [`v1.1.7/`](./v1.1.7) |
 | **v1.1.6** | ①天气按手机定位精到区县（IP 兜底并标明来源），首页/生活流一眼看到带伞·防晒提醒；②分类默认只显示 8 个，其余一键展开（记一笔 / 物品 / 订阅三处统一）；③底部导航可收起（点击隐藏、再点展开）；④加号菜单四入口统一为整页表单；⑤管理后台入口改为 `/flyme`，网页版不再显示入口按钮；⑥报表页文案精简，开屏退场动画更顺滑；⑦修复在线更新清理旧文件的游标 bug | [`v1.1.6/`](./v1.1.6) |
 | **v1.1.5** | ①在线更新页「立即更新」按钮不再被长清单顶出屏幕，待删清单折叠显示；②修复服务端在线更新后网页端仍加载旧 chunk（`planDiff` 认为旧文件仍在包内）；③开屏退场改为幕布上移，退场更连贯；④分类折叠、底栏可收起、首页天气行、AI 记一笔精简 | [`v1.1.5/`](./v1.1.5) |
@@ -159,12 +139,12 @@ node tools/sync-web-to-server.mjs
 
 ---
 
-## 版本速览（v1.3.0）
+## 版本速览（v1.1.3）
 
 | 项 | 值 |
 |---|---|
-| App 版本 | `1.3.0`（versionCode `59`） |
-| 网页版版本 | `1.3.0`（`server/assets/`） |
+| App 版本 | `1.1.3`（versionCode `48`） |
+| 网页版版本 | `1.1.3`（`server/assets/`） |
 | 包名 / applicationId | `com.guifou.app` |
 | 数据表前缀 | `flyme_` |
 | Node / JDK / Android SDK | Node ≥ 20、JDK 17、compileSdk 35 |
