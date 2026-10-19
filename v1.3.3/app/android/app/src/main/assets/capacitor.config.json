@@ -1,0 +1,17 @@
+{
+	"appId": "com.guifou.app",
+	"appName": "纳物",
+	"webDir": "dist",
+	"android": {
+		"allowMixedContent": true,
+		"captureInput": true,
+		"webContentsDebuggingEnabled": false,
+		"adjustMarginsForEdgeToEdge": "auto"
+	},
+	"plugins": {
+		"Keyboard": {
+			"resizeOnFullScreen": true,
+			"resize": "body"
+		}
+	}
+}
