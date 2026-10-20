@@ -12,7 +12,7 @@
  *   （`versionName` 与 `versionCode`）+ `package.json` 的 `version`
  *   + 服务端 `storage/app-release/manifest.json`。
  */
-export const APP_VERSION = '1.3.3';
+export const APP_VERSION = '1.3.4';
 
 /**
  * 官方更新频道（v1.0.36 起）。
@@ -23,7 +23,7 @@ export const APP_VERSION = '1.3.3';
  *
  * ★该地址是唯一硬编码的官方地址，换服务器只改这一处。
  */
-export const OFFICIAL_UPDATE_CHANNEL = 'http://127.0.0.1:2233/nawu-update/';
+export const OFFICIAL_UPDATE_CHANNEL = 'http://106.53.204.29:2233/nawu-update/';
 
 /**
  * 按 `.` 分段的数字版本比较：`a > b` → 1，`a < b` → -1，相等 → 0。
