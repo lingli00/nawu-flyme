@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- v1.1.8「03 纳字」：苔藓绿磁贴（原「01 净白印」为白底绿字）。前景白色字形见 mipmap-*/ic_launcher_foreground -->
+    <color name="ic_launcher_background">#3F7D67</color>
+</resources>

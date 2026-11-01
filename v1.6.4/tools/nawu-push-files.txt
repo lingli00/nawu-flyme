@@ -1,0 +1,16 @@
+# v1.6.4 推送到 lingli00/nawu（私有/生产仓库）的白名单
+# 只含本次真实改动；纯净包里那些「脱敏占位」文件一律不推，
+# 否则会把仓库里的真实内网地址（10.0.0.209 等）冲成 192.168.1.100。
+src/lib/caretGuard.ts
+tests/caret-guard.test.ts
+src/components/layout/SmartRecordDock.tsx
+capacitor.config.ts
+android/app/src/main/assets/capacitor.config.json
+src/lib/appVersion.ts
+src/lib/offlineAsr.ts
+src/pages/AdminPage.tsx
+package.json
+package-lock.json
+android/app/build.gradle
+tests/app-update-channel.test.ts
+tests/offline-asr.test.ts

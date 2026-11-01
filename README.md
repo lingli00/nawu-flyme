@@ -31,7 +31,8 @@ nawu-flyme/
 ├── v1.3.3/
 ├── v1.3.4/
 ├── v1.3.5/
-├── v1.3.6/                    ← 当前最新
+├── v1.3.6/
+├── v1.6.4/                    ← 当前最新
 └── README.md                    本文件
 ```
 
@@ -45,6 +46,7 @@ nawu-flyme/
 
 | 版本 | 独立下载 |
 |---|---|
+| v1.6.4 | [nawu-flyme-v1.6.4.zip](https://github.com/lingli00/nawu-flyme/releases/download/v1.6.4/nawu-flyme-v1.6.4.zip) |
 | v1.3.6 | [nawu-flyme-v1.3.6.zip](https://github.com/lingli00/nawu-flyme/releases/download/v1.3.6/nawu-flyme-v1.3.6.zip) |
 | v1.3.5 | [nawu-flyme-v1.3.5.zip](https://github.com/lingli00/nawu-flyme/releases/download/v1.3.5/nawu-flyme-v1.3.5.zip) |
 | v1.3.4 | [nawu-flyme-v1.3.4.zip](https://github.com/lingli00/nawu-flyme/releases/download/v1.3.4/nawu-flyme-v1.3.4.zip) |
@@ -69,6 +71,7 @@ zip 内即是该版本目录的内容（`app/`、`server/`、`tools/`、`编译�
 
 | 版本 | 主要变化 | 目录 |
 |---|---|---|
+| **v1.6.4** | ①**修复输入框光标跳到末尾**（伤体验的恶性 Bug）：光标点到文字中间后删一个字或打一个字，光标立刻跳到整句末尾，后续输入全落在句尾。根因两层——**原生层** `capacitor.config.ts` 的 `captureInput: true` 让 Capacitor 用简化的 `BaseInputConnection` 顶掉 Chromium 的 `WebViewInputConnection`，它不参与输入法组合区管理，`deleteSurroundingText`（删一个字）退化成「整段重设文本」、`commitText` 把 selection 顶到末尾（现改回默认 `false`）；**JS 层**输入框每次 `input` 都改 `style.height` 撑高，WebView 重排选区把光标甩走——新增 `src/lib/caretGuard.ts`：先读 `selectionStart/End` → 执行校验/格式化 → 改 DOM → 立即恢复 → `requestAnimationFrame` 下一帧再确认，单行输入（最高频路径）改为只读测量、**完全不动样式**；配 `tests/caret-guard.test.ts` 15 例回归（中间插入 / 中间删除 / 选区替换 / 连续快速输入 / 源码护栏断言，删掉保护逻辑测试立刻红）；②**更新渠道可配置化**：渠道地址从写死的公共分发目录改为**部署者自己的站点根目录**（`app/src/lib/appVersion.ts` 的 `OFFICIAL_UPDATE_CHANNEL`，脱敏版为占位域名），服务端 `GF_Update::DEFAULT_SOURCE` 同步；新增 `tools/publish-ota.py`（扫目录生成 `app-manifest.json` / `manifest.json`，可直传 FTP）与 `tools/verify-update-channel.py`（按客户端判定链路体检：清单可达 / 字段齐全 / 相对地址补全 / 包大小 / Range 206 / sha256 / 有无更新结论）；③离线语音模型地址同步改为可配置；④版本 1.6.2 → **1.6.4**（versionCode 77），`tsc` 0 错 / 57 文件 520 例全过 | [`v1.6.4/`](./v1.6.4) |
 | **v1.3.6** | ①**二手买卖完整交易**：对话记一笔一句话识别整笔生意（`买入N95笔记本360元，卖出560元，手续费费率千分之6、快递费20、额外费用10`）——先生成物品入库记录，卡片下方展开卖出信息区（售价 / 手续费费率 / 快递费 / 额外杂费），**费率只填数字、手续费自动算**，提交后物品自动标记退役并把净赚记入生活流收入；新增纯解析模块 `src/ai/trade.ts`（支持 千分之6 / 千分之六 / 0.6% / 6‰ / 6个点）；②**记录复制与就地编辑**：每条已提交消息下方新增「复制」「编辑」，编辑在原气泡展开、改完「重新识别」直走同一条链路，不必整段重输（新增 `src/lib/clipboard.ts`，新 API 优先 + `execCommand` 兜底）；③**语音改端侧识别**：新增原生插件 `NawuSpeechPlugin`，Android 12+ 走 `createOnDeviceSpeechRecognizer()` 纯本机识别、低版本强制 `EXTRA_PREFER_OFFLINE`，**服务端停机或断网时语音输入照常可用**；④**修复退役附加费用名称丢失**（恶性数据 Bug）：费用名称只靠 `onChange` 回写 state，中文输入法组合期 WebView 不派发 `change`，导致保存后只剩金额、名称空白——改为字段挂 ref、提交时读 DOM 真值，并把行 key 由数组下标改为稳定 id（顺带修掉「删中间行后名称串位」） | [`v1.3.6/`](./v1.3.6) |
 | **v1.3.5** | ①**在线更新确认弹窗**改「头 / 身 / 脚」三段式，整体高度上限 `min(86vh, 44rem)`，正文与文件清单各自独立滚动，底部按钮永远贴在弹窗底部（旧版 50 条待删路径会把按钮顶出屏幕）；②网页端「对话记一笔」抽屉补 `rounded-l-3xl` 左圆角，与全站 R 角统一；③手机端搜索改为「输入即搜」：`lib/useLiveInput.ts` 同时监听 `input/change/keyup/paste/cut/compositionupdate/compositionend/search/blur` 并加 150ms 轮询兜底 | [`v1.3.5/`](./v1.3.5) |
 | **v1.3.4** | ①四页横滑第二次重做：改用原生 `overflow-x:auto` + `scroll-snap`（手写 pointer translate 会被 `pointercancel` 打断，真机「根本滑不动」）；②路由同步改为 `scrollend` + 120ms 防抖，手指未抬起不切路由、邻页预热；③天气组件三端加宽，极端长文案自动换行不裁切 | [`v1.3.4/`](./v1.3.4) |

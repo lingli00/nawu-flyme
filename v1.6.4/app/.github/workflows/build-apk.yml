@@ -1,0 +1,119 @@
+name: Build APK
+
+# 手动触发（Actions 页面 Run workflow），或推 v* 标签触发并自动发 Release
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+# 新版仓库的 GITHUB_TOKEN 默认是只读的，而创建 Release 需要写权限。
+# 历史运行 29 次全部卡在最后一步「Create GitHub Release」，根因就是缺这段声明。
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install deps
+        run: |
+          npm install --no-audit --no-fund
+          # lockfile 在 Windows 生成，缺 Linux 原生可选依赖（npm/cli#4828），CI 补装
+          npm i --no-save @rollup/rollup-linux-x64-gnu @esbuild/linux-x64 || true
+
+      - name: Build web bundle
+        run: npm run build
+
+      - name: Sync web assets into Android project
+        run: npx cap sync android
+
+      - name: Setup JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+        # 说明：Capacitor 7.6.9 的 capacitor-android 模块按 Java 21 编译
+        # （"invalid source release: 21"），JDK 21 可正常编译本项目 17 源码。
+
+      # 注：ubuntu runner 自带 Android SDK（ANDROID_HOME 已配置、许可证已接受），
+      # 不要用 android-actions/setup-android@v3 —— 它尝试安装已废弃的 'tools' 包会失败。
+
+      # v1.1.4 安全修复：签名密钥库曾误提交进公开仓库，已从仓库删除。
+      # 现在密钥库只允许从 Secret 落盘——NAWU_KEYSTORE_BASE64 缺失即构建失败，
+      # 不再回退到「仓库里的密钥库」。仓库需配置 5 个 secret：
+      # NAWU_KEYSTORE_BASE64（p12 文件 base64）、NAWU_STORE_FILE（文件名，如 nawu-release.p12）、
+      # NAWU_STORE_PASSWORD、NAWU_KEY_ALIAS、NAWU_KEY_PASSWORD。
+      #
+      # 注意：secrets 上下文不能出现在 if 表达式里，否则整个 workflow 文件会被判为无效
+      # （表现为一次 0 job、秒级失败的运行）。所以判断放进 shell。
+      - name: Materialize signing keystore (required)
+        env:
+          KEYSTORE_B64: ${{ secrets.NAWU_KEYSTORE_BASE64 }}
+          STORE_FILE: ${{ secrets.NAWU_STORE_FILE }}
+        run: |
+          if [ -z "$KEYSTORE_B64" ]; then
+            echo "::error::NAWU_KEYSTORE_BASE64 未设置 —— v1.1.4 起密钥库不再提交进仓库，请在仓库 Settings → Secrets and variables → Actions 中添加（base64 编码的 p12）"
+            exit 1
+          fi
+          mkdir -p android/app
+          echo "$KEYSTORE_B64" | base64 -d > "android/app/${STORE_FILE:-nawu-release.p12}"
+          echo "keystore materialized from NAWU_KEYSTORE_BASE64"
+
+      # 提前把「缺签名 Secrets」变成一条清晰可操作的报错，而不是让 gradle 抛栈。
+      - name: Verify signing secrets present
+        env:
+          NAWU_STORE_PASSWORD: ${{ secrets.NAWU_STORE_PASSWORD }}
+          NAWU_KEY_ALIAS: ${{ secrets.NAWU_KEY_ALIAS }}
+          NAWU_KEY_PASSWORD: ${{ secrets.NAWU_KEY_PASSWORD }}
+        run: |
+          missing=""
+          [ -z "$NAWU_STORE_PASSWORD" ] && missing="$missing NAWU_STORE_PASSWORD"
+          [ -z "$NAWU_KEY_ALIAS" ] && missing="$missing NAWU_KEY_ALIAS"
+          [ -z "$NAWU_KEY_PASSWORD" ] && missing="$missing NAWU_KEY_PASSWORD"
+          if [ -n "$missing" ]; then
+            echo "::error::缺少签名 Secrets:$missing —— 请在仓库 Settings → Secrets and variables → Actions 中添加"
+            exit 1
+          fi
+          echo "签名 Secrets 已就位"
+
+      - name: Build release APK
+        env:
+          NAWU_STORE_FILE: ${{ secrets.NAWU_STORE_FILE }}
+          NAWU_STORE_PASSWORD: ${{ secrets.NAWU_STORE_PASSWORD }}
+          NAWU_KEY_ALIAS: ${{ secrets.NAWU_KEY_ALIAS }}
+          NAWU_KEY_PASSWORD: ${{ secrets.NAWU_KEY_PASSWORD }}
+        run: |
+          chmod +x android/gradlew
+          cd android && ./gradlew assembleRelease --no-daemon
+
+      - name: Rename APK with version
+        id: apk
+        run: |
+          VER=$(grep -oP 'versionName "\K[^"]+' android/app/build.gradle)
+          OUT="nawu-v${VER}.apk"
+          cp android/app/build/outputs/apk/release/app-release.apk "$OUT"
+          echo "version=$VER" >> "$GITHUB_OUTPUT"
+          echo "file=$OUT" >> "$GITHUB_OUTPUT"
+          ls -la "$OUT"
+
+      - name: Upload artifact (always)
+        uses: actions/upload-artifact@v4
+        with:
+          name: nawu-apk-v${{ steps.apk.outputs.version }}
+          path: ${{ steps.apk.outputs.file }}
+
+      - name: Create GitHub Release (only on tag push)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ steps.apk.outputs.file }}
+          generate_release_notes: true

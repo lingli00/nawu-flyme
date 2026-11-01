@@ -1,0 +1,11 @@
+# 安装后生成的配置（含数据库口令、SMTP 授权码），绝不要提交
+/storage/config.php
+/storage/.install.tmp
+/storage/cache/*
+!/storage/cache/.gitignore
+
+# 环境相关
+*.log
+.sql
+.DS_Store
+Thumbs.db

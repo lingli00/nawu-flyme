@@ -1,0 +1,502 @@
+classDiagram
+    direction LR
+
+    %% ============ 数据实体（src/types/entities.ts） ============
+    class Judgement {
+        <<enumeration>>
+        gui
+        xu
+        fou
+    }
+    class Category {
+        +string id
+        +string name
+        +string icon
+        +CategoryKind kind
+        +number order
+    }
+    class ValueRecord {
+        +string id
+        +'expense'|'income' type
+        +number amount
+        +string currency
+        +string date
+        +string categoryId
+        +Judgement judgement
+        +string note
+        +string createdAt
+    }
+    class Goods {
+        +string id
+        +string name
+        +string categoryId
+        +string[] tags
+        +number price
+        +string currency
+        +string buyDate
+        +'active'|'retired'|'favorite' status
+        +Image image
+        +string note
+        +ExtraFee[] extraFees
+        +unknown[] incomes
+        +number sellPrice
+        +number targetDailyCost
+        +boolean countEnabled
+        +number totalCount
+        +number usedCount
+        +string warrantyDate
+        +WarrantyRemind warrantyRemind
+        +string createdAt
+        +string updatedAt
+    }
+    class Image {
+        +string source
+        +string ref
+    }
+    class ExtraFee {
+        +string name
+        +number amount
+    }
+    class WarrantyRemind {
+        +boolean on
+        +number leadDays
+        +string time
+    }
+    class Subscription {
+        +string id
+        +string name
+        +string categoryId
+        +string icon
+        +string currency
+        +'recurring'|'lifetime' type
+        +'month'|'year'|'week' period
+        +number every
+        +number amount
+        +string startDate
+        +string nextRenewDate
+        +boolean autoRenew
+        +number initSpent
+        +string status
+        +Remind remind
+        +string createdAt
+        +string updatedAt
+    }
+    class Remind {
+        +number renewLead
+    }
+    class Bill {
+        +string id
+        +string subId
+        +string dueDate
+        +number amount
+        +string currency
+        +'paid'|'pending' status
+        +string paidDate
+        +number refund
+        +string createdAt
+    }
+    class Mood {
+        +string id
+        +string feeling
+        +string text
+        +boolean crushed
+        +boolean inHeart
+        +string date
+    }
+    class TimeRec {
+        +string id
+        +number durationMin
+        +string[] tags
+        +Judgement meaning
+        +string date
+    }
+    class UsageRecord {
+        +string id
+        +string goodsId
+        +string date
+        +string createdAt
+    }
+
+    %% ============ 服务器 / 会话 / 快照 ============
+    class ServerConfig {
+        +string id
+        +string alias
+        +string url
+        +string note
+        +string createdAt
+        +string lastConnectedAt
+        +boolean lastOk
+    }
+    class Session {
+        +string token
+        +UserInfo user
+        +string savedAt
+    }
+    class UserInfo {
+        +string id
+        +string email
+        +string display_name
+        +boolean verified
+    }
+    class SnapshotPayload {
+        +Record collections
+        +Settings settings
+        +number count
+        +string app
+        +number version
+        +string exportedAt
+    }
+    class Settings {
+        +string baseCurrency
+        +string currency
+        +Record rates
+        +boolean includeRetired
+        +boolean useDepreciation
+        +'system'|'light'|'dark' theme
+        +string palette
+        +boolean autoSync
+        +string lastBackupAt
+        +string aiEndpoint
+        +string aiKey
+        +string aiModel
+        +string[] archivedSubIds
+    }
+
+    %% ============ 网络层 ============
+    class ApiError {
+        +ErrorKind kind
+        +string message
+        +number status
+        +unknown raw
+        +toHumanMessage() string
+    }
+    class ErrorKind {
+        <<enumeration>>
+        invalid_url
+        network
+        timeout
+        tls
+        http
+        auth
+        parse
+    }
+    class HttpClient {
+        <<service>>
+        +request~T~(server, opts) HttpResponse~T~
+        +setUnauthorizedHandler(fn) void
+        -isNative() boolean
+        -injectToken(headers, opts) void
+        -classify(e) ApiError
+        -withRetry(fn, n) Promise
+    }
+    class HttpResponse~T~ {
+        +number status
+        +T data
+    }
+    class RequestOptions {
+        +'GET'|'POST'|'DELETE' method
+        +string path
+        +unknown body
+        +Record query
+        +number timeoutMs
+        +boolean auth
+        +number retry
+    }
+    class AiClient {
+        <<service>>
+        +chatComplete(cfg, messages) string
+        -extractJsonArray(text) unknown[]
+    }
+    class AuthApi {
+        <<service>>
+        +login(server, email, password) Session
+        +register(server, email, password, code) Session
+        +sendCode(server, email, purpose) void
+        +reset(server, email, code, newPassword) void
+        +me(server) UserInfo
+        +logout(server) void
+        +changePassword(server, oldPw, newPw) void
+    }
+    class ServerApi {
+        <<service>>
+        +probeHealth(server) ProbeState
+        +fetchSettings(server) Record
+    }
+    class BackupApi {
+        <<service>>
+        +listBackups(server) BackupRow[]
+        +createBackup(server, body) number
+        +getBackup(server, id) BackupDetail
+        +deleteBackup(server, id) void
+        note "删除首选 DELETE /api/user/backups/:id<br/>失败回退 POST /api/sync/delete"
+    }
+    class BackupRow {
+        +number id
+        +string label
+        +number item_count
+        +number bytes
+        +string device
+        +string created_at
+    }
+    class BackupDetail {
+        +SnapshotPayload|string payload
+        +string label
+    }
+    class ProbeState {
+        <<union>>
+        idle
+        probing
+        online
+        error
+    }
+
+    %% ============ 存储层 ============
+    class KvStore {
+        <<service>>
+        +getKV~T~(key) T
+        +setKV(key, value) void
+        +removeKV(key) void
+    }
+    class Repository {
+        <<service>>
+        +loadCollection~T~(name) T[]
+        +saveCollection(name, rows) void
+        +crud~T~(name) Crud~T~
+    }
+    class Crud~T~ {
+        +list() T[]
+        +insert(row) T
+        +update(id, patch) T
+        +remove(id) void
+    }
+    class Seed {
+        <<service>>
+        +SEED_CATEGORIES Category[]
+        +SEED_SETTINGS Settings
+        +ensureSeeded() void
+    }
+    class Snapshot {
+        <<service>>
+        +buildSnapshot(state) SnapshotPayload
+        +applySnapshot(raw) Partial
+    }
+
+    %% ============ 状态层 ============
+    class UseAppStore {
+        <<store>>
+        +boolean hydrated
+        +string theme
+        +init() void
+    }
+    class UseServerStore {
+        <<store>>
+        +ServerConfig[] servers
+        +string currentId
+        +ProbeState probeState
+        +add(cfg) void
+        +update(id, patch) void
+        +remove(id) void
+        +setCurrent(id) void
+        +probe(id) void
+    }
+    class UseAuthStore {
+        <<store>>
+        +Session session
+        +'unknown'|'valid'|'expired'|'offline' sessionState
+        +login(email, password) void
+        +logout() void
+        +verify() void
+        +markExpired() void
+    }
+    class UseDataStore {
+        <<store>>
+        +Goods[] goods
+        +Subscription[] subscriptions
+        +Bill[] bills
+        +ValueRecord[] valueRecords
+        +Mood[] moods
+        +TimeRec[] times
+        +Category[] categories
+        +addLedger(draft) ValueRecord
+        +updateLedger(id, patch) void
+        +removeLedger(id) void
+        +useGoodsOnce(id) void
+        +retireGoods(id, sellPrice) void
+        +addBill(bill) Bill
+        +markBillPaid(id) void
+        +undo() void
+        +setAllCollections(next) void
+    }
+    class UseSettingsStore {
+        <<store>>
+        +Settings settings
+        +update(patch) void
+    }
+    class UseUiStore {
+        <<store>>
+        +toast(msg, kind, action) void
+        +confirm(opts) Promise~boolean~
+        +openSheet(node) void
+    }
+
+    %% ============ 领域服务（纯函数） ============
+    class LedgerDomain {
+        <<domain>>
+        +groupByDay(rows) DayGroup[]
+        +filterLedger(rows, f) ValueRecord[]
+        +sumByJudgement(rows) Record
+        +monthCompare(rows, m) number
+    }
+    class GoodsDomain {
+        <<domain>>
+        +dailyCost(g) number
+        +perUseCost(g) number
+        +holdDays(g) number
+        +achieveRate(g) number
+        +totalInvest(g) number
+    }
+    class SubDomain {
+        <<domain>>
+        +isArchived(sub, settings) boolean
+        +monthlyAvg(subs, settings) number
+        +yearlyAvg(subs, settings) number
+        +nextRenewCountdown(s, settings) number
+        +ensurePendingBills(subs, bills, settings) Bill[]
+    }
+    note for SubDomain "isArchived 判定：settings.archivedSubIds 包含 sub.id<br/>归档状态存 settings（patchSettings 合并保留）<br/>不存订阅记录（会被 replaceAll 整体重建丢弃）"
+    class StatsDomain {
+        <<domain>>
+        +categoryShare(rows, cats) Slice[]
+        +monthlyTrend(rows, n) Bar[]
+        +judgementBreakdown(rows) Record
+        +topCategories(rows, cats, n) Row[]
+    }
+    class BackupPolicy {
+        <<domain>>
+        +shouldAutoBackup(s) boolean
+    }
+
+    %% ============ AI ============
+    class AiResultItem {
+        +AiAction action
+        +GoodsDraft goodsDraft
+        +SubDraft subDraft
+        +LedgerDraft ledgerDraft
+        +MoodDraft moodDraft
+        +TimeDraft timeDraft
+        +RetireDraft retireDraft
+        +string explanation
+        +'ai'|'local' source
+    }
+    class AiAction {
+        <<enumeration>>
+        create_goods
+        create_subscription
+        create_ledger
+        create_mood
+        create_time
+        retire_sell
+        unknown
+    }
+    class DraftItem {
+        +string key
+        +boolean checked
+        +AiResultItem item
+        +Partial edit
+    }
+    class ParseService {
+        <<service>>
+        +parse(text, cats, settings) AiResultItem[]
+        -normalize(items) AiResultItem[]
+    }
+    class LocalParser {
+        <<service>>
+        +parseLocal(sentence, cats) AiResultItem
+        -extractAmount(text) Amount
+        -detectMeal(text) string
+        -matchCategory(text, cats) Category
+        -guessJudgement(text) Judgement
+        -cleanNote(text) string
+    }
+    class Splitter {
+        <<service>>
+        +splitSentences(text) string[]
+    }
+    class CnNumber {
+        <<service>>
+        +toNumber(s) number
+    }
+    class Keywords {
+        <<const>>
+        +CATEGORY_KEYWORDS
+        +MEAL_MAP
+        +TIME_TO_MEAL
+        +RE_EAT
+        +RE_TRAFFIC
+    }
+    class Prompt {
+        <<const>>
+        +SYSTEM_PROMPT string
+        +buildUserContent(sentences, cats) string
+    }
+
+    %% ============ 关系 ============
+    Goods "1" *-- "0..*" ExtraFee : 附加费用
+    Goods "1" *-- "0..1" Image : 图标
+    Goods "1" *-- "0..1" WarrantyRemind : 保修提醒
+    Subscription "1" *-- "1" Remind : 续费提醒
+    ValueRecord ..> Judgement : 归/需/否
+    TimeRec ..> Judgement : 归/需/否
+    Goods "1" --> "1" Category : categoryId cg*
+    Subscription "1" --> "1" Category : categoryId cs*
+    ValueRecord "1" --> "1" Category : categoryId cl*
+    Subscription "1" --> "0..*" Bill : 扣款流水
+    Goods "1" --> "0..*" UsageRecord : 使用打卡
+
+    HttpClient ..> RequestOptions : 入参
+    HttpClient ..> HttpResponse~T~ : 出参
+    HttpClient ..> ApiError : 失败抛出
+    ApiError ..> ErrorKind : kind
+    HttpClient <.. AuthApi : 依赖
+    HttpClient <.. ServerApi : 依赖
+    HttpClient <.. BackupApi : 依赖
+    ServerApi ..> ProbeState : 探测结果
+    BackupApi ..> BackupRow : 列表
+    BackupApi ..> BackupDetail : 详情
+    BackupDetail ..> SnapshotPayload : payload 可能是字符串
+    SnapshotPayload *-- Settings : settings
+    AiClient ..> AiResultItem : 返回 JSON 数组
+
+    Repository ..> KvStore : 持久化
+    Repository ..> Crud~T~ : 提供泛型 CRUD
+    Snapshot ..> SnapshotPayload : 序列化
+    Snapshot ..> Repository : 反序列化写回
+    note for Snapshot "恢复语义：collections 整体替换（replaceAll）<br/>settings 必须 patchSettings 合并，禁止整体替换<br/>（否则会抹掉另一端写入的未知键，如 archivedSubIds）"
+    Seed ..> Category : 27 条默认分类
+    Seed ..> Settings : 默认设置
+
+    UseAppStore ..> Repository : hydrate
+    UseAppStore ..> Seed : ensureSeeded
+    UseAppStore ..> UseAuthStore : verify
+    UseDataStore ..> Repository : 读写 12 集合
+    UseDataStore ..> UseUiStore : Toast/撤销
+    UseServerStore ..> ServerApi : probeHealth
+    UseAuthStore ..> AuthApi : login/me/logout
+    UseAuthStore ..> Session : 持有
+    UseSettingsStore ..> Settings : 持有
+
+    UseDataStore ..> LedgerDomain : 派生
+    UseDataStore ..> GoodsDomain : 派生
+    UseDataStore ..> SubDomain : 派生
+    UseDataStore ..> StatsDomain : 派生
+    UseDataStore ..> BackupPolicy : 自动备份判断
+
+    ParseService ..> Splitter : 分句
+    ParseService ..> AiClient : AI 优先
+    ParseService ..> LocalParser : 失败兜底
+    ParseService ..> AiResultItem : 输出
+    LocalParser ..> CnNumber : 中文数字
+    LocalParser ..> Keywords : 关键词/正则
+    AiClient ..> Prompt : 系统提示词
+    AiResultItem ..> AiAction : action
+    DraftItem *-- AiResultItem : 包装为可勾选行
