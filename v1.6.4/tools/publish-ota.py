@@ -13,8 +13,8 @@
 
 ★v1.6.4 起渠道 = 服务端站点根目录（见 app/src/lib/appVersion.ts），
   因此清单里的 url 一律写**相对文件名**，客户端会自己拼 origin：
-      https://your.domain.com/app-manifest.json
-      https://your.domain.com/nawu-v1.6.4.apk
+      https://x.133388.xyz/app-manifest.json
+      https://x.133388.xyz/nawu-v1.6.4.apk
 
 用法（在工程根目录）：
 
@@ -24,9 +24,9 @@
     #    <dir>/nawu-server-v1.6.4.zip      （可选，服务端自更新用）
     python tools/publish-ota.py --dir dist-ota --notes "修复输入框光标跳末尾"
 
-    # 2) 直接上传到站点根（FTP；账号走参数或 NAWU_FTP_HOST/USER/PASS 环境变量）
+    # 2) 直接上传到站点根（FTP）
     python tools/publish-ota.py --dir dist-ota --upload \
-        --ftp-host <你的FTP主机> --ftp-user <账号> --ftp-pass <密码>
+        --ftp-host 113.44.1.3 --ftp-user genxin --ftp-pass genxin
 
     # 3) 只体检不写文件
     python tools/publish-ota.py --dir dist-ota --check
@@ -46,7 +46,7 @@ APP_ID = 'nawu-app'
 
 APK_RE = re.compile(r'^nawu-v?(\d+(?:\.\d+)*)\.apk$', re.I)
 PATCH_RE = re.compile(r'^v?(\d+(?:\.\d+)*)-to-v?(\d+(?:\.\d+)*)\.patch$', re.I)
-SERVER_RE = re.compile(r'^nawu-server-v?(\d+(?:\.\d+)*)\.zip$', re.I)
+SERVER_RE = re.compile(r'^nawu-server-v?(\d+(?:\.\d+)*)\.(zip|bin)$', re.I)
 
 # 服务端包里不入清单的路径（运行时数据 / 垃圾文件），与面板逻辑一致
 SKIP_PREFIX = ('storage/',)
@@ -87,9 +87,10 @@ def scan(channel_dir):
             info['from'] = m.group(1) if m else ''
             info['to'] = m.group(2) if m else ''
             patches.append(info)
-        elif low.endswith('.zip') and SERVER_RE.match(name):
+        elif (low.endswith('.zip') or low.endswith('.bin')) and SERVER_RE.match(name):
             m = SERVER_RE.match(name)
             info['version'] = m.group(1) if m else ''
+            info['kind'] = (m.group(2) if m else 'zip').lower()
             servers.append(info)
 
     apks.sort(key=lambda a: vkey(a['version']), reverse=True)
@@ -197,10 +198,9 @@ def main():
     ap.add_argument('--min-version', default='', help='最低可更新版本（低于它的必须整包重装）')
     ap.add_argument('--check', action='store_true', help='只打印结果，不写文件')
     ap.add_argument('--upload', action='store_true', help='生成后直接上传到站点根')
-    # 脱敏版：FTP 账号不入库，用参数或环境变量传入
-    ap.add_argument('--ftp-host', default=os.environ.get('NAWU_FTP_HOST', ''))
-    ap.add_argument('--ftp-user', default=os.environ.get('NAWU_FTP_USER', ''))
-    ap.add_argument('--ftp-pass', default=os.environ.get('NAWU_FTP_PASS', ''))
+    ap.add_argument('--ftp-host', default='113.44.1.3')
+    ap.add_argument('--ftp-user', default='genxin')
+    ap.add_argument('--ftp-pass', default='genxin')
     ap.add_argument('--no-server', action='store_true', help='忽略服务端 zip，不生成 manifest.json')
     args = ap.parse_args()
 
@@ -223,6 +223,9 @@ def main():
     if srv_m:
         print(f'== manifest.json ==  version={srv_m["version"]}  files={len(srv_m["files"])}'
               f'  pkg={srv_m["packageSize"] / 1048576:.2f} MB')
+    if srv_m['packageUrl'].endswith('.zip'):
+        print('  ⚠ 服务端包用 .zip 命名：宝塔/Nginx 默认屏蔽 .zip 扩展名（HTTP 取回会 404），'
+              '请改名为 .bin 再发布（内容仍是 zip，ZipArchive 按内容解包，不看扩展名）')
 
     if args.check:
         print('\n（--check：未写入任何文件）')

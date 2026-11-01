@@ -45,10 +45,10 @@ class GF_Update
      * （app/src/lib/appVersion.ts 的 OFFICIAL_UPDATE_CHANNEL）保持同一个地址。
      * 旧的公共分发目录 http://106.53.204.29/nawu-update/ 已下线（实测连不上），
      * 服务端「在线更新」此前一直报「连不上更新源」也是这个原因。
-     * 现在发布只需把 manifest.json + nawu-server-vX.Y.Z.zip 放到站点根即可，
+     * 现在发布只需把 manifest.json + nawu-server-vX.Y.Z.bin 放到站点根即可，
      * 生成命令：python tools/publish-ota.py --dir dist-ota --upload
      */
-    const DEFAULT_SOURCE   = 'https://your.domain.com/';
+    const DEFAULT_SOURCE   = 'https://x.133388.xyz/';
     // 单片工作预算（毫秒）。**必须显著小于客户端默认超时 15s**：
     // 这个接口是「轮询即推进」，一次响应要等这一片干完才返回。
     // 曾设 18000 → 任何一次有活可干的轮询都会超过前端 15s 被 AbortController 掐断，
