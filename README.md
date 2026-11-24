@@ -1,42 +1,181 @@
-# 纳物 NaWu · v1.8.0
+# 纳物 NaWu · Flyme 版
 
-> 本目录是该版本完整的可编译、可部署工程基线，已脱敏（域名/IP/口令均为占位）。
+> 纯净的**服务端**与**App 端**完整工程，按版本目录归档。
+> 每一次修复迭代都在这里留一份可编译、可部署、可继续迭代的基线。
 
-## 内容
+一套 React 源码 → 两个产物：**Android App**（Capacitor）与**网页版 / PC 版**（Nginx + PHP 托管）。
 
-| 路径 | 说明 |
-|---|---|
-| `app/` | App 端 + 网页端源码（React + TypeScript + Vite + Capacitor） |
-| `server/` | 服务端源码（PHP + MySQL，零第三方框架依赖） |
-| `tools/` | 构建 / 发布 / 同步脚本（Python / Node） |
-| `项目文档/` | 权威项目文档（结构、踩坑、变更日志、部署说明等） |
-| `编译部署与迭代.md` | 完整发版与部署操作手册 |
-| `纳物-v1.8.0.apk` | 本版 Android 安装包 |
+---
 
-## v1.8.0 主要变化
+## 目录约定
 
-- 修复 App 启动空白 + 滑动卡顿：**首包 1472KB → 287KB，降 81%**
-- 修复筛选栏空滑、底栏遮挡文字、底栏把手交互重做
-- 新增整站白屏冒烟测试
-- versionCode 90 / versionName 1.8.0
-
-## 脱敏说明
-
-工程内所有真实服务器域名、公网 IP、内网 IP、数据库/面板口令均已替换为占位值：
-- 域名 → `your.domain.com`
-- 服务器地址 → `your-server-host` / `0.0.0.0`
-- 内网地址 → `192.168.1.100`
-- 各类口令 → `***`
-
-部署时请按你自有的域名、服务器与数据库信息替换 `server/app/lib/Config.php`（或用 `install.php` 安装向导）与 `app/src/lib/appVersion.ts` 中的更新渠道地址。
-
-## 快速上手
-
-```bash
-# 前端依赖与开发
-cd app && npm i && npm run dev
-
-# 服务端部署：把 server/ 整个目录上传到站点根，访问 /install.php
+```
+nawu-flyme/
+├── v1.0.33/                     ← 每个版本一个目录
+│   ├── app/                     App 端工程（React + Vite + TS + Capacitor）
+│   ├── server/                  服务端工程（PHP 7.2~8.0 + MySQL，零第三方依赖）
+│   ├── tools/sync-web-to-server.mjs   前端产物 → 服务端，一条命令同步
+│   └── 编译部署与迭代.md          ★ 完整操作手册，照它做即可
+├── v1.0.34/
+├── v1.0.35/
+├── v1.0.36/
+├── v1.1/
+├── v1.1.1/
+├── v1.1.2/
+├── v1.1.3/
+├── v1.1.9/
+├── v1.1.10/
+├── v1.3.0/
+├── v1.3.1/
+├── v1.3.2/
+├── v1.3.3/
+├── v1.3.4/
+├── v1.3.5/
+├── v1.3.6/
+├── v1.6.4/
+├── v1.8.0/                    ← 当前最新
+└── README.md                    本文件
 ```
 
-详细步骤见 `编译部署与迭代.md` 与 `server/README.md`。
+**每新增一个迭代版本，就新增一个 `vX.Y.Z/` 目录**，内容与上面一致；不要去改动已归档的历史版本目录。
+
+> 📦 **每个版本目录内含该版的 App 安装包 `纳物-vX.Y.Z.apk`**，无需另外找包，进入对应版本目录即可拿到。
+
+---
+
+## 📦 按版本单独下载（不用整仓下载）
+
+每个版本都打了一个独立的 zip 挂在 **Releases** 里，按需只下载你要的那一个：
+
+| 版本 | 独立下载 |
+|---|---|
+| v1.6.4 | [nawu-flyme-v1.6.4.zip](https://github.com/lingli00/nawu-flyme/releases/download/v1.6.4/nawu-flyme-v1.6.4.zip) |
+| v1.3.6 | [nawu-flyme-v1.3.6.zip](https://github.com/lingli00/nawu-flyme/releases/download/v1.3.6/nawu-flyme-v1.3.6.zip) |
+| v1.3.5 | [nawu-flyme-v1.3.5.zip](https://github.com/lingli00/nawu-flyme/releases/download/v1.3.5/nawu-flyme-v1.3.5.zip) |
+| v1.3.4 | [nawu-flyme-v1.3.4.zip](https://github.com/lingli00/nawu-flyme/releases/download/v1.3.4/nawu-flyme-v1.3.4.zip) |
+| v1.3.3 | [nawu-flyme-v1.3.3.zip](https://github.com/lingli00/nawu-flyme/releases/download/v1.3.3/nawu-flyme-v1.3.3.zip) |
+| v1.3.2 | [nawu-flyme-v1.3.2.zip](https://github.com/lingli00/nawu-flyme/releases/download/v1.3.2/nawu-flyme-v1.3.2.zip) |
+| v1.3.1 | [nawu-flyme-v1.3.1.zip](https://github.com/lingli00/nawu-flyme/releases/download/v1.3.1/nawu-flyme-v1.3.1.zip) |
+| v1.3.0 | [nawu-flyme-v1.3.0.zip](https://github.com/lingli00/nawu-flyme/releases/download/v1.3.0/nawu-flyme-v1.3.0.zip) |
+| v1.1.3 | [nawu-flyme-v1.1.3.zip](https://github.com/lingli00/nawu-flyme/releases/download/v1.1.3/nawu-flyme-v1.1.3.zip) |
+| v1.1.2 | [nawu-flyme-v1.1.2.zip](https://github.com/lingli00/nawu-flyme/releases/download/v1.1.2/nawu-flyme-v1.1.2.zip) |
+| v1.1.1 | [nawu-flyme-v1.1.1.zip](https://github.com/lingli00/nawu-flyme/releases/download/v1.1.1/nawu-flyme-v1.1.1.zip) |
+| v1.1 | [nawu-flyme-v1.1.zip](https://github.com/lingli00/nawu-flyme/releases/download/v1.1/nawu-flyme-v1.1.zip) |
+| v1.0.36 | [nawu-flyme-v1.0.36.zip](https://github.com/lingli00/nawu-flyme/releases/download/v1.0.36/nawu-flyme-v1.0.36.zip) |
+| v1.0.35 | [nawu-flyme-v1.0.35.zip](https://github.com/lingli00/nawu-flyme/releases/download/v1.0.35/nawu-flyme-v1.0.35.zip) |
+| v1.0.34 | [nawu-flyme-v1.0.34.zip](https://github.com/lingli00/nawu-flyme/releases/download/v1.0.34/nawu-flyme-v1.0.34.zip) |
+| v1.0.33 | [nawu-flyme-v1.0.33.zip](https://github.com/lingli00/nawu-flyme/releases/download/v1.0.33/nawu-flyme-v1.0.33.zip) |
+
+zip 内即是该版本目录的内容（`app/`、`server/`、`tools/`、`编译部署与迭代.md`），解压即用。历史版本请在 [Releases 页](https://github.com/lingli00/nawu-flyme/releases) 挑选。
+
+---
+
+## 版本索引
+
+| 版本 | 主要变化 | 目录 |
+|---|---|---|
+| **v1.8.0** | 本轮修 App 四项 bug：①**启动空白 + 滑动卡顿**——首包 `1472KB → 287KB`，**降 81%**；②筛选栏空滑；③底栏遮挡文字；④底栏把手交互优雅重做；并新增整站白屏冒烟测试。versionCode 90。完整工程 + 安装包见 [`v1.8.0/`](./v1.8.0)（内含 `纳物-v1.8.0.apk`） | [`v1.8.0/`](./v1.8.0) |
+| **v1.6.4** | ①**修复输入框光标跳到末尾**（伤体验的恶性 Bug）：光标点到文字中间后删一个字或打一个字，光标立刻跳到整句末尾，后续输入全落在句尾。根因两层——**原生层** `capacitor.config.ts` 的 `captureInput: true` 让 Capacitor 用简化的 `BaseInputConnection` 顶掉 Chromium 的 `WebViewInputConnection`，它不参与输入法组合区管理，`deleteSurroundingText`（删一个字）退化成「整段重设文本」、`commitText` 把 selection 顶到末尾（现改回默认 `false`）；**JS 层**输入框每次 `input` 都改 `style.height` 撑高，WebView 重排选区把光标甩走——新增 `src/lib/caretGuard.ts`：先读 `selectionStart/End` → 执行校验/格式化 → 改 DOM → 立即恢复 → `requestAnimationFrame` 下一帧再确认，单行输入（最高频路径）改为只读测量、**完全不动样式**；配 `tests/caret-guard.test.ts` 15 例回归（中间插入 / 中间删除 / 选区替换 / 连续快速输入 / 源码护栏断言，删掉保护逻辑测试立刻红）；②**更新渠道可配置化**：渠道地址从写死的公共分发目录改为**部署者自己的站点根目录**（`app/src/lib/appVersion.ts` 的 `OFFICIAL_UPDATE_CHANNEL`，脱敏版为占位域名），服务端 `GF_Update::DEFAULT_SOURCE` 同步；新增 `tools/publish-ota.py`（扫目录生成 `app-manifest.json` / `manifest.json`，可直传 FTP）与 `tools/verify-update-channel.py`（按客户端判定链路体检：清单可达 / 字段齐全 / 相对地址补全 / 包大小 / Range 206 / sha256 / 有无更新结论）；③离线语音模型地址同步改为可配置；④版本 1.6.2 → **1.6.4**（versionCode 77），`tsc` 0 错 / 57 文件 520 例全过 | [`v1.6.4/`](./v1.6.4) |
+| **v1.3.6** | ①**二手买卖完整交易**：对话记一笔一句话识别整笔生意（`买入N95笔记本360元，卖出560元，手续费费率千分之6、快递费20、额外费用10`）——先生成物品入库记录，卡片下方展开卖出信息区（售价 / 手续费费率 / 快递费 / 额外杂费），**费率只填数字、手续费自动算**，提交后物品自动标记退役并把净赚记入生活流收入；新增纯解析模块 `src/ai/trade.ts`（支持 千分之6 / 千分之六 / 0.6% / 6‰ / 6个点）；②**记录复制与就地编辑**：每条已提交消息下方新增「复制」「编辑」，编辑在原气泡展开、改完「重新识别」直走同一条链路，不必整段重输（新增 `src/lib/clipboard.ts`，新 API 优先 + `execCommand` 兜底）；③**语音改端侧识别**：新增原生插件 `NawuSpeechPlugin`，Android 12+ 走 `createOnDeviceSpeechRecognizer()` 纯本机识别、低版本强制 `EXTRA_PREFER_OFFLINE`，**服务端停机或断网时语音输入照常可用**；④**修复退役附加费用名称丢失**（恶性数据 Bug）：费用名称只靠 `onChange` 回写 state，中文输入法组合期 WebView 不派发 `change`，导致保存后只剩金额、名称空白——改为字段挂 ref、提交时读 DOM 真值，并把行 key 由数组下标改为稳定 id（顺带修掉「删中间行后名称串位」） | [`v1.3.6/`](./v1.3.6) |
+| **v1.3.5** | ①**在线更新确认弹窗**改「头 / 身 / 脚」三段式，整体高度上限 `min(86vh, 44rem)`，正文与文件清单各自独立滚动，底部按钮永远贴在弹窗底部（旧版 50 条待删路径会把按钮顶出屏幕）；②网页端「对话记一笔」抽屉补 `rounded-l-3xl` 左圆角，与全站 R 角统一；③手机端搜索改为「输入即搜」：`lib/useLiveInput.ts` 同时监听 `input/change/keyup/paste/cut/compositionupdate/compositionend/search/blur` 并加 150ms 轮询兜底 | [`v1.3.5/`](./v1.3.5) |
+| **v1.3.4** | ①四页横滑第二次重做：改用原生 `overflow-x:auto` + `scroll-snap`（手写 pointer translate 会被 `pointercancel` 打断，真机「根本滑不动」）；②路由同步改为 `scrollend` + 120ms 防抖，手指未抬起不切路由、邻页预热；③天气组件三端加宽，极端长文案自动换行不裁切 | [`v1.3.4/`](./v1.3.4) |
+| **v1.3.3** | ①**更新机制**：服务端与 APP 后续更新默认走增量，增量包不可用（文件丢失/大小不符/sha256 不符）时自动降级重下全量包（manifest 新增 `fallback` 段，`usedFallback` 保证只降级一次，实测端到端跑通）；②**菜单清理**：后台撤掉「AI 记一笔 / 识图添加」两个开关（旧版独立入口 v1.3.1 已下线，残留代码一并清理），识图与对话产生的记录**只留本机**、不上传云端；③**对话记一笔**：保存后卡片不再消失，原地亮出【已完成】并锁定字段，队列还有剩时给「下一条（剩 N 条）」；④**识账规则**：确认【教 AI 识账】服务的是当前对话记一笔（不存在第二套规则体系），删除「本地学习规则」分区，学到的规则自动同步云端账号（payload 升 `{v:2,manual,learned}` 信封，旧数组双向兼容；上云前剥掉来源原文 `from`），手动添加规则效果不变；⑤**多服务器**：同一台设备最多配 3 个服务端，登录态按服务器 id 分槽保存（`flyme.sessions`），切换服务器直接恢复该服务器账号、免重复登录，切换也不会丢会话；⑥**生活流**：右上角新增搜索（标题/备注/金额/分类）、「手动记一笔」补齐圆角；⑦**主页面横滑**：重写为微信式（1:1 跟手不缩放、邻页同屏可见、可停在半过渡状态、松手才吸附，首尾阻尼 0.32）；⑧**网页端弹层圆角**：旧式 sheet 抽屉由「只圆左上角」改为左侧双角 24px，与统一组件 Sheet 一致 | [`v1.3.3/`](./v1.3.3) |
+| **v1.3.2** | ①**界面减法**：移除底部导航中央加号（含上滑/右滑手势）与右下角常驻对话气泡，底栏回归纯净四页签；②**左右滑动引导**：新用户首次进入浮出「左右滑动切换页面」气泡（双箭头动画），6 秒或首次成功滑页即退场，localStorage 记忆不再打扰；③**命名一致**：菜单「对话记一笔」打开的面板标题/无障碍名同样叫「对话记一笔」（原为「智能记录」，用户以为跳错页）；④**圆角统一**：新增/编辑订阅弹层与订阅页签内的输入框、周期按钮、操作按钮 10px→12px（卡片维持全局 16px），电脑网页版登录页/账号编辑页去掉桌面端方角白板与方角白色顶栏、输入框与按钮补到 12px | [`v1.3.2/`](./v1.3.2) |
+| **v1.3.1** | ①**OCR 五类账单训练**：闲鱼/抖音/京东/淘宝/拼多多 12 张真实截图样本（锚点分流、店铺头行切段、断字拼接、货币前缀噪声、0 元券后单）；②**语音识别修复**：AndroidManifest 补 `RECORD_AUDIO`/`MODIFY_AUDIO_SETTINGS`（Capacitor 7 权限链根因）+ pointerup 竞态 + 计时/脉冲点/进度条反馈；③**滑页与加号手势**：四大页左右横滑切换、中央加号轻点/长按/上滑开菜单、右滑进对话；④**移除「AI 记一笔」独立页**全链路，对话记录统一走 SmartRecordDock（移动端底部抽屉化） | [`v1.3.1/`](./v1.3.1) |
+| **v1.3.0** | ①**周期统计**：按周/月/年自定义周期分类支出 + 周期日均 + 物品每日摊销；②**退役自动扣减**：卖出/退役识别并定格摊销、净赚记入生活流；③**智能图标**：物品/订阅/生活流自动匹配图标（本地品牌资产 → 代理直链 → 内置 glyph → 分类默认，四级推荐链），卡片可一键更换 | [`v1.3.0/`](./v1.3.0) |
+| **v1.1.7** | ①**IP 定位精确到区县**：服务端自带纯真 IP 库（`server/app/data/qqwry.dat`）+ 行政区划中心点表（`geo-cn.json`），`/api/geo` 一次返回省/市/区县与经纬度，天气不再「人在桐柏显示郑州」；前端不再依赖境外 IP 接口，也不申请定位权限；②**地址收敛**：未知路径返回品牌 404 页（HTTP 404，带「回到首页」按钮），`/flyme` 直达后台，网页版不再挂管理入口；③**改账号/密码即强制重登**：登录名或密码改成功后作废该管理员全部会话，修掉改完密码调接口 404 的怪象；④**加号菜单四入口统一抽屉**：AI 记一笔 / 价值记账 / 手动录入 / 新增订阅同一套形态；⑤**更新通道留存策略**：完整包、增量包、服务端包各留最近 3 份，发布时自动清理 | [`v1.1.7/`](./v1.1.7) |
+| **v1.1.6** | ①天气按手机定位精到区县（IP 兜底并标明来源），首页/生活流一眼看到带伞·防晒提醒；②分类默认只显示 8 个，其余一键展开（记一笔 / 物品 / 订阅三处统一）；③底部导航可收起（点击隐藏、再点展开）；④加号菜单四入口统一为整页表单；⑤管理后台入口改为 `/flyme`，网页版不再显示入口按钮；⑥报表页文案精简，开屏退场动画更顺滑；⑦修复在线更新清理旧文件的游标 bug | [`v1.1.6/`](./v1.1.6) |
+| **v1.1.5** | ①在线更新页「立即更新」按钮不再被长清单顶出屏幕，待删清单折叠显示；②修复服务端在线更新后网页端仍加载旧 chunk（`planDiff` 认为旧文件仍在包内）；③开屏退场改为幕布上移，退场更连贯；④分类折叠、底栏可收起、首页天气行、AI 记一笔精简 | [`v1.1.5/`](./v1.1.5) |
+| **v1.1.4** | ①「01 净白印」品牌：新图标（白磁贴 + 描边 + 衬线「纳」字印）与五段式开屏动效，三端资源同源；②修复 Android 资源目录限定符顺序（`drawable-land-night-*`）；③App 更新链路与官方频道加固 | [`v1.1.4/`](./v1.1.4) |
+| **v1.1.3** | ①**卖出盈利计入生活流**：物品标记转卖/填写售价后，有净赚（售价−总投入，含附加费）时自动记一笔收入（改售价同步更新、恢复在用或删除物品自动撤回、亏损不记）；AI 记一笔说「把魅族20卖了1400」也能直接定位物品并完成退役+记账；②**报表页新增「AI 分析」**：本地规则洞察（收支全景/集中度/归需否/趋势/转卖净赚）+ 已配置 API 的 AI 点评，未配置时只出本地洞察、不发请求；③**AI 配置闭环**：AI 记一笔页内嵌设置卡（endpoint/key/model，保存即用），设置页新增「测试连接」按钮，配好 API 即刻生效；④**新品牌图标与开屏**：弃用早期下载的白杯子图，改为自有品牌标（托盘+下落箭头，绿底白字），launcher/round/自适应前景/开屏 11 张全套资源，含 v1.1.2/v1.1.1/v1.1 全部内容 | [`v1.1.3/`](./v1.1.3) |
+| **v1.1.2** | ①**修复应用内更新完全不可用**（v1.0.36~v1.1.1 通杀）：`ApkUpdatePlugin` 是 App 本地类（非 npm 包），Capacitor 不会自动注册本地插件，`MainActivity` 漏写 `registerPlugin(ApkUpdatePlugin.class)`，点「立即更新」被桥接层拒绝、报「当前环境不支持应用内更新」——应用内更新链自 v1.0.36 上线起从未在真机跑通（此前被官方频道地址 bug 掩盖）；v1.1.2 修复注册时序（必须在 `super.onCreate()` 之前）并让错误信息透出底层原因；②**修复网页版双入口 bundle**：`spa-m.html` 入口块同步正则从未匹配成功，线上曾同时加载两个版本的 chunk，现正则修复并清理残留；③含 v1.1.1/v1.1 全部内容 | [`v1.1.2/`](./v1.1.2) |
+| **v1.1.1** | ①**修复官方更新频道地址 bug**：App 检查更新时请求地址被归一化逻辑剥掉了 `/nawu-update/` 目录，实际拿到的是网页首页而非频道清单，导致官方频道（含 3.2MB 增量补丁）自上线起从未生效、一直提示「已是最新」；现已修复，官方频道恢复优先；②**服务端默认更新源修正**：此前误用脱敏副本打包上线，默认源变成 `127.0.0.1:2233` 被 SSRF 拦截（「连不上更新源」），现改回真实地址并明确「线上包必须从未脱敏源码树出」；③含 v1.1 全部内容（备份 .flyme 加密、昵称同步、移除套餐显示） | [`v1.1.1/`](./v1.1.1) |
+| **v1.1** | ①**备份加密**：后台「数据备份/全站备份」导出改为 .flyme 加密容器（FLYME1：PBKDF2 20 万次 + AES-256-GCM，与用户端导出同格式防窃取），导入需同一密码、先本地解密预览再确认，服务端表名/列名白名单 + 事务回滚；②**修复昵称不同步**：管理后台用户列表/名册现在能看到用户端设置的昵称（profiles 单一事实源 + 保存广播同步）；③账号页**移除套餐/会员显示**（纯免费无会员模式）；④正式版本号升至 **1.1**（versionCode 45） | [`v1.1/`](./v1.1) |
+| **v1.0.36** | ①**服务端在线更新**：后台一键检查/更新/回滚（manifest 驱动，下载→sha256 校验→备份→解包→应用→清理→自检，协作式分片断点续跑，含数据库迁移），不用再登宝塔；②**App 应用内更新**：官方频道优先 + 增量补丁（NAWU-PATCH1，1.0.35→1.0.36 仅 3.2MB），频道不可达自动回退用户自己的服务器；③后台新增 **App 发布管理**（上传 APK 即更新 manifest，历史版本可回退）；④安全：SSRF 端口白名单参数化、解包路径双保险（safeRelPath + realpath） | [`v1.0.36/`](./v1.0.36) |
+| **v1.0.35** | ①报表页「结余/净额」负号修正（此前 -47.59 显示成 47.59 引发误读）+ 点「结余」弹出口径解释；②净值趋势支持点选每期明细与「怎么读」说明，图表有反馈；③生活流无支出占位改为**每日一言**（按日期轮换）；④置物墙改为全屏子页（去掉底部 TabBar，与其它子页一致）；⑤根治「键盘页退出→后台切回后底部大留白」（原生 onResume 复位 WebView 高度 + JS 双拍兜底） | [`v1.0.35/`](./v1.0.35) |
+| **v1.0.34** | 补齐**导入备份**功能：用户端「选择 .flyme 文件 → 解密 → 预览 → 恢复到本机」（无需登录即可导入未加密备份），后台管理端新增「导入备份」（合并 / 覆盖两种模式，表名与列名双白名单 + 事务） | [`v1.0.34/`](./v1.0.34) |
+| **v1.0.33** | 安全加固：修复服务端与 App 端共 27 项安全风险（越权访问、注入、凭据与日志泄露、接口防刷、上传与路径校验等），加固签名与构建流程。界面与功能与 v1.0.32 一致，可覆盖安装 | [`v1.0.33/`](./v1.0.33) |
+
+---
+
+## 最短路径
+
+### 1) 部署服务端（约 5 分钟，宝塔面板最省事）
+
+把 `vX.Y.Z/server/` 整个目录上传到站点根目录，浏览器访问安装向导：
+
+```
+http://你的域名/install.php
+```
+
+装完**务必**在宝塔 →「网站 → 设置 → 伪静态」里贴上转发规则：
+
+```nginx
+location / {
+    try_files $uri $uri/ /index.php?$query_string;
+}
+```
+
+> ⚠️ **漏了这一步，首页能开、一登录就报「接口不存在 / 404」** —— 因为 Nginx 只处理物理路径，`/api/*` 根本没到 PHP。
+> 自查口诀：访问 `http://你的域名/api/health`，返回 `{"ok":true,"db":true,...}` 才算通；
+> 返回堡塔自带的 404 页面 = 伪静态没配。
+
+细节见各版本目录下的 `server/README.md`。
+
+> 📍 **v1.1.7 起服务端多一份 IP 库**：`server/app/data/qqwry.dat`（纯真库，约 26MB，GBK）
+> 负责把访客 IP 解到区县，`server/app/data/geo-cn.json`（约 170KB）提供行政区划中心点。
+> 因为体积太大，**交付仓库不收录 qqwry.dat**；缺这个文件时 `/api/geo` 会返回
+> `{"ok":false,"error":"IP 归属地库暂不可用"}`，前端天气行自动隐藏，其它功能不受影响。
+> 需要时从官方更新包（`nawu-server-*.bin`）或线上站点取回同名文件即可。
+
+### 2) 编译 App
+
+```bash
+cd vX.Y.Z/app
+npm install
+npm run dev                 # 浏览器里先看界面 http://localhost:5173
+
+cd android
+./gradlew assembleRelease   # 需先配好签名，见 app/docs/BUILD.md §6
+```
+
+### 3) 改完前端后，把新界面同步到网页版（**别漏**）
+
+```bash
+cd vX.Y.Z
+node tools/sync-web-to-server.mjs
+```
+
+`app/src` 是唯一的前端源码。只重打 APK 而忘了同步 `server/assets/`，网页版就会停在旧界面、版本号也会分叉。
+
+---
+
+## 关于这份包「纯净」在哪
+
+- ❌ 无 `node_modules`、无 `dist/`、无 `android/app/build/` 等构建产物（`npm install` 即得）
+- ❌ 无**历史安装包**（`server/storage/app-release/` 只留一个空白 `manifest.json`）
+- ❌ 无 `server/storage/config.php`（你的数据库口令，安装向导生成）
+- ❌ 无 `.user.ini`、无面板默认欢迎页
+- ❌ **无签名密钥**（`.p12` / `.jks` / `.keystore` 一律不入库）—— 发布签名密钥请自行生成并放在**仓库外**的口令管理里
+- ✅ 我方服务器 IP / 域名 / 站点名已全量脱敏（示例地址统一为 `192.168.1.100`）
+
+## 五条不能破的约定
+
+1. **一套源码两个产物** —— 改完必须 `npm run build` 再 `node tools/sync-web-to-server.mjs`。
+2. **网络出口唯一** —— 所有请求走 `app/src/net/httpClient.ts`；POST 一律 JSON（服务端只读 `php://input`）。
+3. **本地键名 / ID 算法 / 快照 `app` 字段不得改**（`guifou.<collection>`、`guifou.kv.*`、`newId()`、`app: "flyme-web"`），否则新旧备份不互通。
+4. **明文 HTTP 是产品级例外** —— `usesCleartextTraffic` 与 `network_security_config.xml` 是「连内网自建服务器」的必需项，`cap add android` 重建原生工程后必须复查。
+5. **签名密钥永不进仓库** —— 口令放仓库外的 `~/.gradle/gradle.properties` 或环境变量。
+
+---
+
+## 版本速览（v1.1.3）
+
+| 项 | 值 |
+|---|---|
+| App 版本 | `1.1.3`（versionCode `48`） |
+| 网页版版本 | `1.1.3`（`server/assets/`） |
+| 包名 / applicationId | `com.guifou.app` |
+| 数据表前缀 | `flyme_` |
+| Node / JDK / Android SDK | Node ≥ 20、JDK 17、compileSdk 35 |
+| PHP / MySQL | PHP 7.2 ~ 8.0、MySQL 5.5+ |
