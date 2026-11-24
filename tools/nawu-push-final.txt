@@ -1,4 +1,0 @@
-src/components/layout/MainShell.tsx
-src/router.tsx
-tests/main-shell-gesture.test.ts
-src/index.css
