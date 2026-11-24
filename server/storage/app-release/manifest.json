@@ -1,0 +1,23 @@
+{
+  "version": "1.7.2",
+  "notes": "v1.7.2 设计系统落地：键盘焦点可访问性 + 语义令牌补缺 + 全站微字号收编 + 组件库补缺 + 触摸热区 44px",
+  "file": "nawu-v1.7.2.apk",
+  "fileSize": 14695768,
+  "publishedAt": "2026-11-12 13:43",
+  "history": [
+    {
+      "version": "1.7.1",
+      "notes": "v1.7.1 修复多端同步（删除/修改跨端生效）+ 首次同步提速修复 + 下拉刷新 + 版本号统一 1.7.1",
+      "file": "nawu-v1.7.1.apk",
+      "fileSize": 14695564,
+      "publishedAt": "2026-11-12T11:45:13Z"
+    },
+    {
+      "version": "1.6.5",
+      "notes": "v1.6.5 AI 接入：网页端/App 新增「我的 → AI 接入」，生成 API Key 即可让 Muse/任意 AI 帮你记账",
+      "file": "nawu-v1.6.5.apk",
+      "fileSize": 14685884,
+      "publishedAt": "2026-11-10 10:36"
+    }
+  ]
+}

@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- viewport-fit=cover：配合 env(safe-area-inset-*) 做刘海屏/手势条适配 -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#f4f5f3" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#121513" media="(prefers-color-scheme: dark)" />
+    <meta name="format-detection" content="telephone=no" />
+    <!-- ★v1.0.33 P2-12：自有品牌标（原用默认 favicon） -->
+    <link rel="icon" type="image/svg+xml" href="/logo.svg" />
+    <meta name="description" content="纳物 · 物品与消费复盘：给每一笔支出一个「归 / 需 / 否」的判断" />
+    <title>纳物</title>
+    <!-- ★v1.8.0 bug1：首帧底色。index.css 尚未下载时，html/body 也必须已是纸色，
+         否则「一片空白（只剩状态栏）」的空窗会从第一帧开始。 -->
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #f4f5f3;
+        color: #18201c;
+      }
+      @media (prefers-color-scheme: dark) {
+        html,
+        body {
+          background: #121513;
+          color: #e9ecea;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root">
+      <!-- ★v1.8.0 bug1：第一帧骨架 —— 先于任何 JS 的可见内容。
+           此前 #root 为空，冷启动到 hydrate 完成之间整屏空白（只剩状态栏）。
+           样式内联在此（index.css 尚未加载，不能依赖外链），
+           用户「深色主题」时也能立刻拿到正确底色。
+           React 首次渲染会整体替换这个节点，无需手动移除。 -->
+      <div class="nw-boot" style="position:fixed;inset:0;z-index:130;display:flex;align-items:center;justify-content:center;background:#f4f5f3">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:12px">
+          <div style="width:36px;height:36px;border-radius:10px;background:#6b7370;opacity:.8"></div>
+          <div style="font-size:15px;line-height:22px;font-weight:500;color:#4d5751;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Noto Sans SC','Microsoft YaHei',system-ui,sans-serif">纳物</div>
+          <div style="width:160px;height:4px;overflow:hidden;border-radius:999px;background:#e4e7e3">
+            <div style="width:33%;height:100%;border-radius:999px;background:#3f7d67"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script>
+      /* ★v1.8.0 bug1：骨架随主题换深色底（正文脚本加载前即完成，无空窗） */
+      try {
+        var bg = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#121513' : '#f4f5f3';
+        var el = document.querySelector('#root .nw-boot');
+        if (el) el.style.background = bg;
+      } catch (e) {}
+    </script>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

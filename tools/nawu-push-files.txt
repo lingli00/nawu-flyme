@@ -1,0 +1,49 @@
+# v1.6.4 推送到 ***/nawu（私有/生产仓库）的白名单
+# 只含本次真实改动；纯净包里那些「脱敏占位」文件一律不推，
+# 否则会把仓库里的真实内网地址（192.168.1.100 等）冲成 192.168.1.100。
+src/lib/caretGuard.ts
+tests/caret-guard.test.ts
+src/components/layout/SmartRecordDock.tsx
+capacitor.config.ts
+android/app/src/main/assets/capacitor.config.json
+src/lib/appVersion.ts
+src/lib/offlineAsr.ts
+src/pages/AdminPage.tsx
+package.json
+package-lock.json
+android/app/build.gradle
+tests/app-update-channel.test.ts
+tests/offline-asr.test.ts
+# v1.6.5 AI 接入（Muse/任意智能体）
+src/api/aiAccess.ts
+src/pages/AiAccessPage.tsx
+src/router.tsx
+src/pages/MePage.tsx
+src/api/endpoints.ts
+# v1.7.0 多端增量同步（记录级 LWW）
+src/sync/model.ts
+src/sync/outbox.ts
+src/sync/note.ts
+src/sync/engine.ts
+src/api/sync.ts
+src/store/useDataStore.ts
+src/store/useAuthStore.ts
+src/store/useAppStore.ts
+src/pages/SettingsPage.tsx
+src/lib/appVersion.ts
+package.json
+package-lock.json
+android/app/build.gradle
+tests/sync-engine.test.ts
+# v1.7.1 同步修复 + 下拉刷新 + 版本号统一
+src/sync/engine.ts
+src/sync/outbox.ts
+src/api/sync.ts
+src/components/ui/PullToRefresh.tsx
+src/components/layout/MainShell.tsx
+src/pages/AiAccessPage.tsx
+src/lib/appVersion.ts
+package.json
+package-lock.json
+android/app/build.gradle
+tests/sync-engine.test.ts

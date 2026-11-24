@@ -1,0 +1,70 @@
+﻿# v1.7.6 ~ v1.7.8（2026-11-21/22）· PC UI 重构 + 崩溃修复 + 图片云端化
+# 只含真实改动；脱敏占位文件一律不推。
+# --- v1.7.6 PC 端 UI 重构 ---
+src/index.css
+src/components/ui/Button.tsx
+src/components/layout/MainShell.tsx
+src/components/layout/PageShell.tsx
+src/pages/MePage.tsx
+src/pages/HomePage.tsx
+src/pages/ReportPage.tsx
+src/pages/LedgerPage.tsx
+src/pages/SubListPage.tsx
+src/pages/SettingsPage.tsx
+src/pages/BackupPage.tsx
+src/pages/CategoryPage.tsx
+src/pages/RulePage.tsx
+src/pages/ServerManagePage.tsx
+src/pages/WallPage.tsx
+src/pages/AiAccessPage.tsx
+src/pages/AccountPage.tsx
+tailwind.config.ts
+# --- v1.7.7 崩溃修复（前端归一化 + 防御）---
+src/types/entities.ts
+src/lib/goodsIcon.ts
+src/lib/aiInboxMerge.ts
+src/lib/imageCompress.ts
+src/lib/shareCard.ts
+src/lib/appVersion.ts
+src/domain/goods.ts
+src/components/BillSheet.tsx
+src/components/GoodsPhoto.tsx
+src/components/IconPicker.tsx
+src/components/SubCalendar.tsx
+src/components/LifeSheets.tsx
+src/main.tsx
+src/store/backupActions.ts
+# --- v1.7.7 图片云端化（前端）---
+src/lib/imageCloud.ts
+src/lib/imageMigrate.ts
+src/store/imageCloudActions.ts
+src/sync/engine.ts
+src/sync/model.ts
+# --- v1.7.7 测试 ---
+tests/ai-inbox-merge.test.ts
+tests/goods-icon.test.ts
+tests/goods-icon-cloud.test.ts
+tests/image-cloud.test.ts
+tests/image-migrate.test.ts
+tests/image-slim-cloud.test.ts
+tests/kv-quota.test.ts
+tests/sync-push-guard.test.ts
+# --- v1.7.7 服务端（归一化 + 图片存储 + AI API）---
+server/index.php
+server/app/Api.php
+server/app/VERSION
+server/app/lib/AiApi.php
+server/app/lib/AiSchema.php
+server/app/lib/EntityNormalize.php
+server/app/lib/ImageStore.php
+server/app/lib/Update.php
+# --- 版本号 ---
+package.json
+package-lock.json
+android/app/build.gradle
+# --- v1.7.8 AI API 增强 ---
+server/app/lib/BrandIndex.php
+server/app/lib/Support.php
+src/storage/kv.ts
+src/components/PhotoImg.tsx
+src/lib/iconCache.ts

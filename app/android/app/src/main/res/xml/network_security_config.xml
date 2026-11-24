@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  v1.0.33 安全修复 · 网络安全配置
+  ─────────────────────────────────────────────────────────────
+  【保留 base-config cleartextTrafficPermitted="true"】——这是产品级例外，不是遗漏：
+
+  纳物是「用户自建服务器」架构（capacitor.config.ts 的 R1 注释与 docs/BUILD.md
+  均有说明）：
+    ① 局域网扫描（src/net/lanScan.ts）要对着 10.0.0.x / 192.168.x.x 等
+       私网 IP 发 http:// 探测请求，CapacitorHttp 走原生网络栈，受本配置约束；
+    ② 用户可在设置里填 http:// 的自建服务器地址（内网部署常见）。
+
+  Android 的网络安全配置不支持 CIDR / 网段通配，domain-config 只能逐条
+  写完整域名，无法表达「放行所有私网 IP」。因此若把 base-config 改为
+  false，局域网扫描与内网 http 服务器会直接不可用。
+
+  已采取的收紧措施：
+    - trust-anchors 仍只认系统 CA（不信任用户 CA），自签 HTTPS 需用户自行安装；
+    - 服务端侧（PHP）已对所有出站请求加 SSRF 校验、对图片代理输出加
+      CSP: default-src 'none'，即便走 http 也不会把脚本执行面挂到客户端；
+    - 登录 token 存应用沙箱（SharedPreferences），已配合 allowBackup=false
+      关闭系统备份导出通道。
+
+  如你的部署场景只用 https 公网服务器、不需要局域网功能，可把下面
+  base-config 的 cleartextTrafficPermitted 改成 "false" 一键收紧
+  （改动仅影响 http 请求，https 不受影响）。
+-->
+<network-security-config>
+    <!-- 允许明文 HTTP：内网自建服务器（如 http://192.168.1.100:3030）必须开启 -->
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+    <!-- 自签 HTTPS 证书默认不信任：由用户在系统内安装 CA，不要在这里加 user -->
+</network-security-config>

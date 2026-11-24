@@ -1,0 +1,33 @@
+# ============================================================
+# 纳物 App · APK 签名配置模板（v1.0.33 安全修复）
+#
+# ⚠️ 不要把本文件的内容写进仓库里的 android/gradle.properties！
+#    那个文件是 Capacitor 生成的常规文件（只放 org.gradle.jvmargs、
+#    android.useAndroidX 等），是会被 git 跟踪的 —— 一旦写入口令并提交，
+#    就重复了 v1.0.32 的老问题（密钥口令随源码泄露）。
+#
+# ✅ 正确做法（二选一）：
+#   方案 A（本地构建推荐）：把下面四行复制到【仓库之外】的全局文件
+#       ~/.gradle/gradle.properties
+#     （Windows：C:\Users\<你>\.gradle\gradle.properties）
+#     该文件永不进版本库，Gradle 会用 project.findProperty() 自动读到。
+#
+#   方案 B（CI 推荐）：通过环境变量注入，变量名完全相同：
+#       NAWU_STORE_FILE / NAWU_STORE_PASSWORD / NAWU_KEY_ALIAS / NAWU_KEY_PASSWORD
+#     GitHub Actions 见 .github/workflows/build-apk.yml（用的就是本方案）。
+#
+# 校验：配置好后执行
+#       cd android && ./gradlew assembleRelease
+#     未配置时 release 构建会直接报错并提示（不会静默用默认口令）；
+#     debug 构建则回落 Android SDK 的 debug 签名，不影响日常调试。
+# ============================================================
+
+# ---- APK 签名（PKCS12）----
+# 密钥库文件名（相对 android/app/ 的路径，也可写绝对路径）
+NAWU_STORE_FILE=nawu-release.p12
+# 密钥库密码
+NAWU_STORE_PASSWORD=change-me
+# 密钥别名
+NAWU_KEY_ALIAS=nawu
+# 密钥密码（PKCS12 通常与 store 密码相同）
+NAWU_KEY_PASSWORD=change-me

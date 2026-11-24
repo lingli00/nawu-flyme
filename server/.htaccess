@@ -1,0 +1,35 @@
+# Apache 兜底（如果你用 Apache 而不是 Nginx）
+
+Options -Indexes +FollowSymLinks
+
+DirectoryIndex index.php
+
+# 禁止访问内部目录
+RedirectMatch 404 ^/app/
+RedirectMatch 404 ^/storage/
+RedirectMatch 404 /\.git
+RedirectMatch 404 \.(md|log|example)$
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # 真实文件/目录直接放行
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+
+    # 其余全部交给 index.php（前端是 HashRouter，只有 /api/* 会命中 PHP）
+    RewriteRule ^ index.php [L]
+</IfModule>
+
+<IfModule mod_mime.c>
+    AddType application/javascript .js .mjs
+    AddType image/svg+xml .svg
+</IfModule>
+
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType application/javascript "access plus 7 days"
+    ExpiresByType text/css "access plus 7 days"
+    ExpiresByType image/svg+xml "access plus 7 days"
+</IfModule>

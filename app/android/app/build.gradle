@@ -1,0 +1,111 @@
+apply plugin: 'com.android.application'
+
+android {
+    namespace "com.guifou.app"
+    compileSdk rootProject.ext.compileSdkVersion
+    buildToolsVersion "35.0.0"
+    defaultConfig {
+        applicationId "com.guifou.app"
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        versionCode 90
+        versionName "1.8.0"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        aaptOptions {
+             // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
+             // Default: https://android.googlesource.com/platform/frameworks/base/+/282e181b58cf72b6ca770dc7ca5f91f135444502/tools/aapt/AaptAssets.cpp#61
+            ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
+        }
+    }
+    /* v1.0.11 璧峰浐瀹氱鍚嶏紙PKCS12锛夛紝debug/release 缁熶竴鐢ㄥ悓涓€鎶?key锛?
+     * 鐗堟湰闂村彲鐩存帴瑕嗙洊鍗囩骇銆?
+     *
+     * 鈽卾1.0.33 瀹夊叏淇锛氱鍚嶅彛浠や笉鍐嶇‖缂栫爜鍦ㄦ瀯寤鸿剼鏈噷銆?
+     *   鏃х増鎶?storePassword/keyPassword 鏄庢枃鍐欏湪 build.gradle 涓紝婧愮爜鍖?
+     *   涓€鍙戝嚭鍘诲瘑閽ュ彛浠ゅ氨闅忎箣娉勯湶锛涗笖 nawu-release.p12 鏇鹃殢浠撳簱鍒嗗彂锛?
+     *   涓よ€呯粍鍚堟剰鍛崇潃銆屼换浣曚汉閮借兘鐢ㄥ悓涓€鎶?key 绛惧彂鍋囧啋鍗囩骇鍖呫€嶃€?
+     *   鐜板湪鍙ｄ护涓€寰嬩粠 gradle.properties / 鐜鍙橀噺璇诲彇锛堣
+     *   android/gradle.properties.template锛夛紝鏈厤缃椂锛?
+     *     - release 鏋勫缓锛氱洿鎺ユ姤閿欏苟缁欏嚭閰嶇疆鎸囧紩锛堢粷涓嶉潤榛樼敤榛樿鍙ｄ护锛夛紱
+     *     - debug 鏋勫缓锛氬洖钀?Android SDK 鑷姩鐢熸垚鐨?debug 绛惧悕锛屼笉褰卞搷寮€鍙戣皟璇曘€?
+     *
+     * 鈿狅笍 杩愮淮蹇呭仛锛氭棦鐒舵棫鍙ｄ护宸查殢婧愮爜娉勯湶锛岃閲嶆柊鐢熸垚涓€鎶婄鍚嶅瘑閽?
+     *   锛坘eytool -genkeypair 鏂板缓 .p12锛夛紝鍦?Google Play / 搴旂敤鍒嗗彂娓犻亾
+     *   瀹屾垚绛惧悕杩佺Щ锛屽苟鎶婃棫 key 浣滃簾銆備粎鏀规瀯寤鸿剼鏈笉鎹?key锛?
+     *   鎷垮埌鏃?key+鏃у彛浠ょ殑浜轰緷鐒惰兘绛惧彂鍙鐩栧畨瑁呯殑鍖呫€?*/
+    signingConfigs {
+        release {
+            def nawuStoreFile     = project.findProperty('NAWU_STORE_FILE') ?: System.getenv('NAWU_STORE_FILE')
+            def nawuStorePassword = project.findProperty('NAWU_STORE_PASSWORD') ?: System.getenv('NAWU_STORE_PASSWORD')
+            def nawuKeyAlias      = project.findProperty('NAWU_KEY_ALIAS') ?: System.getenv('NAWU_KEY_ALIAS')
+            def nawuKeyPassword   = project.findProperty('NAWU_KEY_PASSWORD') ?: System.getenv('NAWU_KEY_PASSWORD')
+            def wantRelease = project.gradle.startParameter.taskNames.any { it.toLowerCase().contains('release') }
+
+            if (nawuStoreFile && nawuStorePassword && nawuKeyAlias && nawuKeyPassword) {
+                storeFile file(nawuStoreFile)
+                storePassword nawuStorePassword
+                storeType 'PKCS12'
+                keyAlias nawuKeyAlias
+                keyPassword nawuKeyPassword
+            } else if (wantRelease) {
+                throw new GradleException(
+                    "缂哄皯 APK 绛惧悕閰嶇疆銆傝鍦?android/gradle.properties 鎴栫幆澧冨彉閲忎腑璁剧疆锛歕n" +
+                    "  NAWU_STORE_FILE / NAWU_STORE_PASSWORD / NAWU_KEY_ALIAS / NAWU_KEY_PASSWORD\n" +
+                    "锛堟ā鏉胯 android/gradle.properties.template锛涗笉瑕佹妸鍙ｄ护鎻愪氦杩涗粨搴擄級"
+                )
+            }
+        }
+    }
+    buildTypes {
+        debug {
+            // 浠呭湪閰嶇疆浜嗙鍚嶅彛浠ゆ椂鎵嶄笌 release 鍏辩敤鍥哄畾 key锛涘惁鍒欑敤 SDK debug 绛惧悕
+            if (signingConfigs.release.storeFile) {
+                signingConfig signingConfigs.release
+            }
+        }
+        release {
+            signingConfig signingConfigs.release
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+    // Capacitor 7 + AGP 8 瑕佹眰 JDK 17
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    // v1.0.36锛欰GP 8 榛樿涓嶇敓鎴?BuildConfig锛孉pkUpdatePlugin 瑕佽
+    // VERSION_NAME/VERSION_CODE 鍋氥€屽綋鍓嶇増鏈€嶄笂鎶ワ紝杩欓噷鏄惧紡鎵撳紑
+    buildFeatures {
+        buildConfig true
+    }
+}
+
+repositories {
+    flatDir{
+        dirs '../capacitor-cordova-android-plugins/src/main/libs', 'libs'
+    }
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation "androidx.appcompat:appcompat:$androidxAppCompatVersion"
+    implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
+    implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
+    implementation project(':capacitor-android')
+    testImplementation "junit:junit:$junitVersion"
+    androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
+    androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
+    implementation project(':capacitor-cordova-android-plugins')
+}
+
+apply from: 'capacitor.build.gradle'
+
+try {
+    def servicesJSON = file('google-services.json')
+    if (servicesJSON.text) {
+        apply plugin: 'com.google.gms.google-services'
+    }
+} catch(Exception e) {
+    logger.info("google-services.json not found, google-services plugin not applied. Push Notifications won't work")
+}
