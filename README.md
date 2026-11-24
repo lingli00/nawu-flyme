@@ -13,12 +13,10 @@
 |---|---|
 | `app/` | **App 端 + 网页端源码**：React 18 + TypeScript 5 + Vite 5 + Tailwind 3 + Zustand + Capacitor 7（Android） |
 | `server/` | **服务端源码**：PHP 8 原生（零第三方框架依赖）+ MySQL（表前缀 `flyme_`） |
-| `tools/` | 构建 / 发布 / 同步脚本（Python / Node）：一键同步前端产物到服务端、出 APK、发更新渠道 |
-| `项目文档/` | 权威项目文档：项目结构、踩坑清单、变更日志、部署说明、AI 接入等 |
 | `编译部署与迭代.md` | 完整发版与部署操作手册（照它做即可上线） |
 | `README.md` | 本文件 |
 
-**Android 安装包**见右侧 **Releases**：`纳物-v1.8.0.apk`（v1.8.0 版，直接下载安装）。
+**Android 安装包**：`纳物-v1.8.0.apk`（v1.8.0 版，直接下载安装），也在右侧 **Releases** 里。
 
 ---
 
@@ -48,7 +46,7 @@ npm run build                  # 产出 dist/
 
 ### 服务端
 
-把 `server/` 整个目录上传到你的站点根，访问 `/install.php` 走安装向导，或按 `项目文档/` 手工配置 `server/app/lib/Config.php`（数据库连接等）。
+把 `server/` 整个目录上传到你的站点根，访问 `/install.php` 走安装向导，或手工配置 `server/app/lib/Config.php`（数据库连接等）。
 
 ---
 
@@ -63,7 +61,7 @@ npm run build                  # 产出 dist/
 
 部署时请替换为你**自有**的域名、服务器与数据库信息（`server/app/lib/Config.php` 或 `/install.php` 安装向导），以及 `app/src/lib/appVersion.ts` 里的更新渠道地址。
 
-> 语音识别（vosk）与 OCR（tesseract）的运行时模型文件较大，未纳入本仓库，需按 `app/docs/BUILD.md` / `项目文档/` 从官方渠道下载后放入对应目录。
+> 语音识别（vosk）与 OCR（tesseract）的运行时模型文件较大，未纳入本仓库，需按 `app/docs/BUILD.md` 从官方渠道下载后放入对应目录。
 
 ---
 
